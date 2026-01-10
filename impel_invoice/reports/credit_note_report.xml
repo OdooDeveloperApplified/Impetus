@@ -1,0 +1,251 @@
+<odoo>
+    <template id="document_layout_credit_note">
+        <t t-call="web.basic_layout">
+            <!-- HEADER -->
+            <div class="o_boxed_header" style="text-align:center; line-height:1.4;border: 1px solid black; box-sizing: border-box; margin: 0; border-bottom:none;">
+               <div style="width:100%; overflow:hidden;">
+                    <div class="ms-2" style="float:left; text-align:left; font-weight:bold; color:#000;">
+                        <t t-if="res_company.vat">
+                            GSTIN: <t t-esc="res_company.vat"/>
+                        </t>
+                    </div>
+                </div>                
+                <h3 style="text-align: center; margin: 4px 0; color:#000;">CREDIT NOTE</h3>
+                <h1 style="text-align: center; margin: 4px 0; color:#000;">IMPETUS PROLIFIC PVT LTD</h1>
+                <p style="text-align: center; color:#000;">
+                    <t t-esc="res_company.street"/><t t-esc="res_company.street2"/><br/>
+                    <t t-esc="res_company.city"/> - <t t-esc="res_company.zip"/><br/><br/>
+                </p>
+            </div>
+
+            <!-- Inner content -->
+            <div>
+                <t t-out="0"/>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer" style="text-align:center; border-top:1px solid #000; padding-top:5px;">
+            </div>
+        </t>
+    </template>
+
+    <template id="credit_note_report_views">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="impel_invoice.document_layout_credit_note">
+                    <style>
+                        /* Force border to appear on every physical page in PDF */
+                        @page {
+                            margin: 5mm;
+                            /* draw a 1px black border around every page */
+                            border: 1px solid black;
+                        }
+
+                        /* Keep your existing .page styling untouched */
+                        .page {
+                            
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        /* Ensure header/footer overlap with border */
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
+                    </style>
+
+                    <div class="page" style="border: 1px solid black; border-bottom:none; margin: 0;">
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px; padding-top:6px; border-right:1px solid black; padding-bottom:6px;">
+                                <span>Cr. Note No.: <t t-esc="o.name"/></span><br/>
+                            </div>
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px; padding-top:6px; padding-bottom:6px;">
+                                <span>Dated: <t t-esc="o.invoice_date.strftime('%d-%m-%Y') if o.invoice_date else ''"/></span><br/>
+                            </div>
+                        </div>
+
+                        <div style="width:100%;">
+                            <div style="display:inline-block; vertical-align:top; width:49%; padding-left:6px; padding-top:10px; padding-bottom:4px;">
+                                <span>Party : </span><b><t t-esc="o.partner_shipping_id.name"/></b><br/>
+                                <span style="padding-left:50px;"><t t-esc="o.partner_shipping_id.street"/><br/></span>
+                                <span style="padding-left:50px;"><t t-esc="o.partner_shipping_id.street2"/><br/></span>
+                                <span style="padding-left:50px;"><t t-esc="o.partner_shipping_id.city"/>,<t t-esc="o.partner_shipping_id.state_id.name"/>-<t t-esc="o.partner_id.zip"/><br/></span>
+                            </div>
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px; padding-top:10px; padding-bottom:4px;">
+                                <span>Party GSTIN / UIN &#160;: <b><t t-esc="o.partner_shipping_id.vat"/></b></span><br/>
+                                <span>Place of Supply &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.partner_shipping_id.state_id.name"/></span><br/><br/><br/>
+                                <span>Amount (Rs.) &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.amount_total"/></span><br/>
+                            </div>
+                        </div>                        
+
+                        <style>
+                            table.only-column-borders {
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+
+                            /* Regular column borders */
+                            table.only-column-borders th,
+                            table.only-column-borders td {
+                                border-right: 1px solid black;
+                            }
+
+                            /* Top border for header row */
+                            table.only-column-borders tr:first-child th {
+                                border-top: 1px solid black;
+                            }
+
+                            /* Bottom border for last row */
+                            table.only-column-borders tr:last-child td {
+                                border-bottom: 1px solid black;
+                            }
+
+                            /* Remove right border from last column (both header body) */
+                            table.only-column-borders th:last-child,
+                            table.only-column-borders td:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Remove any border-right from header row overrides */
+                            table.only-column-borders thead tr th:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Optional: remove any full-row border applied directly on in header */
+                            table.only-column-borders thead tr {
+                                border-right: none !important;
+                            }
+                        </style>
+
+                        <t t-set="display_discount" t-value="any(l.discount for l in o.invoice_line_ids)"/>
+                        <t t-set="counter" t-value="0"/>
+                        
+                        
+                        <div style="page-break-inside:avoid; padding-top:15px;">
+                            <div class="row" style=" display:flex; font-weight: bold; padding-bottom: 4px; gap:0;">
+                                <div class="col-2 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Org. Inv. No.</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Dated</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">HSN/SAC</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Unit</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Tax Rate</div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Taxable Amt.</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">IGST</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Total Tax</div>
+                                <div class="col-4"></div>
+                            </div>
+
+                            <!-- Tax Table Values -->
+
+                            <t t-foreach="o.invoice_line_ids" t-as="line">
+                                <div class="row" style="padding-top:4px; padding-bottom:4px; font-size:14px;">
+
+                                    <!-- Org Inv No -->
+                                    <div class="col-2 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="o.ref.split()[-2] if o.ref else ''"/>
+                                    </div>
+
+                                    <!-- Dated -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="o.invoice_date.strftime('%d-%m-%Y') if o.invoice_date else ''"/>
+                                    </div>
+
+                                    <!-- HSN/SAC -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                                    </div>
+
+                                    <!-- Unit -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <span t-field="line.product_uom_id.name"/>
+                                    </div>
+
+                                    <!-- Tax Rate -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <span t-field="line.tax_ids"/>
+                                    </div>
+
+                                    <!-- Taxable Amount -->
+                                    <div class="col-2 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="line.price_subtotal"/>
+                                    </div>
+
+                                    <!-- IGST (Tax Amount) -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="sum(line.price_total - line.price_subtotal for tax in line.tax_ids)"/>
+                                    </div>
+
+                                    <!-- Total Tax -->
+                                    <div class="col-1 ms-2" style="flex:1; margin:0; padding:0;">
+                                        <t t-esc="sum(line.price_total - line.price_subtotal for tax in line.tax_ids)"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <div  class="bank-details" style="width:100%; border-top:1px solid black; border-bottom:none;margin-top:5px; page-break-inside: avoid; padding-top:4px; padding-bottom:4px;">
+                            <div style="display:inline-block; vertical-align:top; width:100%; box-sizing:border-box; padding-left:6px;">
+                                <span style="font-size:20px;">Cash Discount <t t-esc="o.discount_percentage"/> @ against Invoice no. <t t-esc="o.ref.split()[-2] if o.ref else ''"/></span><br/>
+                                <span style="font-size:20px;">Transport Expenses Return Rs.</span><br/>
+                            </div>
+                        </div>
+                        
+                        <div class="row" style="border-bottom:1px solid black; border-top:1px solid black; font-size:20px;">
+                            <div class="col-5">
+                                <div class="mb-3" t-attf-style="#{'text-align:justify;text-justify:inter-word;padding-top:70px;padding-left:6px;'}" name="comment">
+                                    <span style="font-weight:bold; display:inline;"><u><t t-esc="o.amount_total"/></u><br/> 
+                                        <t t-if="o.amount_total">
+                                            <span t-esc="'Rupees ' + o.currency_id.amount_to_text_indian(o.amount_total) + ' Only'"/>
+                                        </t>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-7">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div style="text-align:right; line-height:90px; padding-right:6px;">
+                                            <span><strong>For IMPETUS PROLIFIC PVT LTD</strong></span><br/>
+                                            <span style="font-weight:bold;">Authorised Signatory</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Code to set desried paper format for Sale order -->
+    <record id="paperformat_credit_note_custome" model="report.paperformat">
+        <field name="name">Credit Note</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">15</field>
+        <field name="margin_bottom">20</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Report Action -->
+    <record id="credit_note_report_action" model="ir.actions.report">
+        <field name="name">Credit Note Report</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">impel_invoice.credit_note_report_views</field>
+        <field name="report_file">impel_invoice.credit_note_report_views</field>
+        <field name="attachment" eval="False"/> 
+        <field name="paperformat_id" ref="impel_invoice.paperformat_credit_note_custome"/>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

@@ -1,0 +1,15 @@
+<odoo>
+    <record id="view_appraisal_line_tree" model="ir.ui.view">
+        <field name="name">employee.appraisal.line.tree</field>
+        <field name="model">employee.appraisal.line</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="employee_id"/>
+                <field name="card_id"/>
+                <field name="amount"/>
+                <field name="date"/>
+                <field name="given_by_id"/>
+            </tree>
+        </field>
+    </record>
+</odoo>

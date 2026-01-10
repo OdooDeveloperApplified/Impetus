@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="quotation_report_inherit" inherit_id="purchase.report_purchasequotation_document">
+        <xpath expr="//table[@class='table table-sm mt-4']" position="replace" >
+            <t t-set="real_lines" t-value="[line for line in o.order_line if not line.display_type]"/>
+            <t t-set="counter" t-value="0"/>
+            <table class="table table-sm o_main_table table-borderless only-column-borders" style="width:100%;">
+                <thead style="display: table-row-group">
+                    <tr style="text-align: center;border: 1px solid black; border-left:none;">
+                        <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                        <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                        <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                        <th class="text-start" style="width: 12%;vertical-align:center">Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="o.order_line" t-as="line">
+                        <!-- Add a Note (spans all 8 columns) to appear as a single row instead of product record -->
+                        <t t-if="line.display_type == 'line_note'">
+                            <tr>
+                                <td colspan="99" style="border-top: 1px solid black;font-style: italic;text-align: left; background-color: #f8f1f1ff;">
+                                    <span t-field="line.name"/>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-elif="line.display_type == 'line_section'">
+                            <tr>
+                                <td colspan="99" style="border-top: 1px solid black;font-style: italic; text-align: left; background-color: #f7f7f7;">
+                                    <span t-field="line.name"/>
+                                </td>
+                            </tr>
+                        </t>
+                        <!-- Normal Product Line -->
+                        <t t-elif="not line.display_type">
+                            <t t-set="counter" t-value="counter + 1"/>
+                            <tr>
+                                <td style="text-align: center;">
+                                    <t t-esc="counter"/>
+                                </td>
+                                <td>
+                                    <span t-if="line.name" t-field="line.name"/>
+                                </td>
+                                <td>
+                                    <!-- <span t-if="line.product_id.l10n_in_hsn_code or ''" t-field="line.product_id.l10n_in_hsn_code or ''"/> -->
+                                     <span t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                                </td>
+                                <td>
+                                    <span t-field="line.product_uom_qty"/>
+                                </td>
+                                <td>
+                                    <span t-field="line.product_uom"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+    
+                    <tr>
+                        <td colspan="3" style="text-align:center;padding:4px; border-right:none;border-top:1px solid black;">
+                            <strong>Grand Total</strong>
+                        </td>
+                        <td colspan="3" style="text-align:left; padding: 4px;border-top:1px solid black;">
+                            <t t-set="total_qty" t-value="sum(line.product_uom_qty for line in o.order_line)"/>
+                             <t t-set="uom_name" t-value="o.order_line and o.order_line[0].product_uom.name or ''"/>
+                            <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </xpath>
+
+        <!-- Code to add custom div after Payment terms block -->
+        <xpath expr="//p[@t-field='o.notes']" position="replace">
+            <div class="row">
+                <!-- Left Column: Terms & Conditions -->
+                <div class="col-8">
+                    <p t-field="o.notes" class="mt-4"/>
+                    <div class="oe_structure"/>
+                </div>
+                <!-- Right Column: Signature -->
+                <div class="col-4">
+                    <strong>for IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                    <strong>Authorised Signatory</strong>
+                </div>
+            </div>
+        </xpath>
+
+        <xpath expr="//h2[@class='mt-4']" position="before">
+            <hr/>
+            <div class="row">
+                <div class="col-6">
+                    <p><strong>Executive:</strong> <t t-esc="o.executive or ''"/></p>
+                    <p><strong>MC Details:</strong> <t t-esc="o.mc_details or ''"/></p>
+                </div>
+                <div class="col-6">
+                    
+                    <p><strong>Indent No.:</strong> <t t-esc="o.indent_no or ''"/></p>
+                    <p><strong>Dated:</strong> <t t-esc="o.date_order.strftime('%d-%m-%Y  ( %I:%M %p )') if o.date_order else ''"/></p> 
+                </div>
+            </div>
+            <hr/>
+        </xpath>
+
+
+    </template>
+</odoo>

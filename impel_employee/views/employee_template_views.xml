@@ -1,0 +1,121 @@
+<odoo>
+    <record id="hr_employee_form_inherit_custom" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.custom</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='marital']" position="after">
+                <field name="emp_anniversary" invisible="marital not in ['married', 'cohabitant']"/>
+            </xpath>
+            <xpath expr="//field[@name='children']" position="after">
+                <field name="emp_child_ids">
+                    <tree editable="bottom">
+                        <field name="name"/>
+                        <field name="dob"/>
+                        <field name="education"/>
+                    </tree>
+                </field>
+                <field name="mother_name"/>
+                <field name="mother_dob"/>
+                <field name="father_name"/>
+                <field name="father_dob"/>
+                <field name="parent_anniversary"/>
+            </xpath>
+
+            <xpath expr="//group[@name='emergency']" position="after">
+                <group string="Identity &amp; Education" col="2">
+                    <field name="adhaar_no"/>
+                    <field name="pan_no"/>
+                    <field name="driving_licence"/>
+                </group>
+
+                <!-- Insurance & Government IDs -->
+                <group string="Insurance &amp; Government Schemes" col="2">
+                    <field name="mediclaim_number"/>
+                    <field name="mediclaim_amount"/>
+                    <field name="insurance_number"/>
+                    <field name="insurance_amount"/>
+                    <field name="termplan_number"/>
+                    <field name="termplan_amount"/>
+                    <field name="ayushman_number"/>
+                    <field name="ehram_number"/>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='study_school']" position="after">
+                <field name="emp_experience"/>
+            </xpath>
+
+            <xpath expr="//field[@name='work_location_id']" position="after">
+                <field name="joining_date"/>
+                <field name="employee_module" options="{'no_create': True}"/>
+                <field name="company_assets"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Appreciation Cards">
+                    <field name="appraisal_line_ids">
+                        <tree editable="bottom">
+                            <field name="date"/>
+                            <field name="card_id"/>
+                            <field name="amount"/>
+                            <field name="given_by_id"/>
+                        </tree>
+                    </field>
+
+                    <group>
+                        <field name="reward_total" readonly="1"/>
+                        <field name="penalty_total" readonly="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Employee Birthdays and Anniversaries Tree View: starts -->
+    <record id="view_employee_event_wizard_form" model="ir.ui.view">
+        <field name="name">employee.event.wizard.form</field>
+        <field name="model">employee.event.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Event">
+                <group>
+                    <field name="month"/>
+                    <field name="event_type"/>
+                </group>
+                <footer>
+                    <button name="action_view_employees"
+                            type="object"
+                            string="View"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_employee_event_wizard" model="ir.actions.act_window">
+        <field name="name">Birthdays &amp; Anniversaries</field>
+        <field name="res_model">employee.event.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_employee_event_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_employee_birthday_anniversary_list" model="ir.ui.view">
+        <field name="name">hr.employee.birthday.anniversary.tree</field>
+        <field name="model">hr.employee</field>
+        <field name="priority" eval="18"/> 
+        <field name="arch" type="xml">
+            <tree string="Birthdays &amp; Anniversaries This Month" create="false" delete="false">
+                <field name="name"/>
+                <field name="birthday"/>
+                <field name="emp_anniversary"/>
+                <field name="job_title"/>
+                <field name="department_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <menuitem id="menu_employee_birthday_anniversary" name="Birthdays &amp; Anniversaries" parent="hr.hr_menu_hr_reports" action="action_employee_event_wizard"
+    sequence="30"/>
+    <!-- Employee Birthdays and Anniversaries Tree View: ends -->
+</odoo>

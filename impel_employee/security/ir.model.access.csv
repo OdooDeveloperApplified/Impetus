@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_child_info,access.employee.child.info,impel_employee.model_employee_child_info,base.group_user,1,1,1,1
+access_employee_appraisal_card,access.employee.appraisal.card,impel_employee.model_employee_appraisal_card,base.group_user,1,1,1,1
+access_employee_appraisal_line,access.employee.appraisal.line,impel_employee.model_employee_appraisal_line,base.group_user,1,1,1,1
+access_employee_event_wizard,access.employee.event.wizard,impel_employee.model_employee_event_wizard,base.group_user,1,1,1,1

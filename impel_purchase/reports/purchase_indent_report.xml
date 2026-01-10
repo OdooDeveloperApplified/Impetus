@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== DOCUMENT LAYOUT TEMPLATE ===================== -->
+    <template id="document_layout_purchase">
+        <t t-call="web.basic_layout">
+            <!-- HEADER -->
+            <div class="o_boxed_header" style="text-align:center; line-height:1.4;border:1px solid black; box-sizing:border-box; margin:0; border-bottom:none;"> 
+                <p style="text-align:left;margin-left:10px;">
+                    <strong><t t-if="res_company.vat">GSTIN: <t t-esc="res_company.vat"/></t></strong>
+                </p>
+                <strong>
+                    <p style="text-align:center; border-bottom:1px solid black; width:25%; margin:0 auto;">PURCHASE INDENT</p>
+                </strong>
+                <h2 style="text-align:center; margin:4px 0;">IMPETUS PROLIFIC PVT LTD</h2>
+                <p style="text-align:center;">
+                    <t t-esc="res_company.street"/><t t-esc="res_company.street2"/><br/>
+                    <t t-esc="res_company.city"/> - <t t-esc="res_company.zip"/><br/>
+                    <t t-if="res_company.partner_id.l10n_in_pan">PAN: <t t-esc="res_company.partner_id.l10n_in_pan"/><br/></t>
+                    <strong><t t-if="res_company.phone">Tel.: <t t-esc="res_company.phone"/></t></strong>
+                </p>
+            </div>
+
+            <!-- INNER CONTENT -->
+            <div><t t-out="0"/></div>
+
+            <!-- FOOTER -->
+            <div class="footer" style="text-align:center; font-size:12px; border-top:1px solid #000; padding-top:5px;"></div>
+        </t>
+    </template>
+
+      <!-- Report content section (Inner content) -->
+    <template id="purchase_indent_report_view">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="impel_purchase.document_layout_purchase">
+                <style>
+                    /* Force border to appear on every physical page in PDF */
+                    @page {
+                        margin: 5mm;
+                        /* draw a 1px black border around every page */
+                        border: 1px solid black;
+                    }
+
+                    /* Keep your existing .page styling untouched */
+                    .page {
+                        
+                        box-sizing: border-box;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    /* Ensure header/footer overlap with border */
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                </style>
+
+                    <div class="page" style="border: 1px solid black; box-sizing: border-box; margin: 0;">
+                        <!-- Information block -->
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px;">
+                                <!-- Left Column Content -->
+                                <p><strong>Executive:</strong> <t t-esc="o.executive or ''"/></p>
+                                <p><strong>MC Details:</strong> <t t-esc="o.mc_details or ''"/></p>            
+                            </div>
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px;">
+                                <!-- Right Column Content -->
+                                <p><strong>Indent No.:</strong> <t t-esc="o.indent_no or ''"/></p>
+                                <p><strong>Dated:</strong> <t t-esc="o.date_order.strftime('%d-%m-%Y  ( %I:%M %p )') if o.date_order else ''"/></p>
+                            </div>
+                        </div>
+
+                        <div style="width:100%; border-bottom:1px solid black; padding:4px;">
+                            <p><strong>Service Report No.:</strong> <t t-esc="o.service_report_no or ''"/></p>
+                        </div>
+                        <!-- Empty Row -->
+                        <div style="height: 25px;"></div>
+
+                        <style>
+                            table.only-column-borders {
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+
+                            /* Regular column borders */
+                            table.only-column-borders th,
+                            table.only-column-borders td {
+                                border-right: 1px solid black;
+                            }
+
+                            /* Top border for header row */
+                            table.only-column-borders tr:first-child th {
+                                border-top: 1px solid black;
+                            }
+
+                            /* Bottom border for last row */
+                            table.only-column-borders tr:last-child td {
+                                border-bottom: 1px solid black;
+                            }
+
+                            /* Remove right border from last column (both header body) */
+                            table.only-column-borders th:last-child,
+                            table.only-column-borders td:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Remove any border-right from header row overrides */
+                            table.only-column-borders thead tr th:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Optional: remove any full-row border applied directly on in header */
+                            table.only-column-borders thead tr {
+                                border-right: none !important;
+                            }
+                        </style>
+
+                        <t t-set="real_lines" t-value="[line for line in o.order_line if not line.display_type]"/>
+                        <t t-set="counter" t-value="0"/>
+                        <table class="table table-sm o_main_table table-borderless only-column-borders" style="width:100%;">
+                            <thead style="display: table-row-group">
+                                <tr style="text-align: center;border: 1px solid black; border-left:none;">
+                                    <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                                    <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                                    <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                                    <th class="text-start" style="width: 12%;vertical-align:center">Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.order_line" t-as="line">
+                                    <!-- Add a Note (spans all 8 columns) to appear as a single row instead of product record -->
+                                    <t t-if="line.display_type == 'line_note'">
+                                        <tr>
+                                            <td colspan="99" style="border-top: 1px solid black;font-style: italic;text-align: left; background-color: #f8f1f1ff;">
+                                                <span t-field="line.name"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-elif="line.display_type == 'line_section'">
+                                        <tr>
+                                            <td colspan="99" style="border-top: 1px solid black;font-style: italic; text-align: left; background-color: #f7f7f7;">
+                                                <span t-field="line.name"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Normal Product Line -->
+                                    <t t-elif="not line.display_type">
+                                        <t t-set="counter" t-value="counter + 1"/>
+
+                                        <tr>
+                                            <td style="text-align: center;">
+                                                <t t-esc="counter"/>
+                                            </td>
+                                            <td>
+                                                <span t-if="line.name" t-field="line.name"/>
+                                            </td>
+
+                                            <td>
+                                                <!-- <span t-if="line.product_id.l10n_in_hsn_code or ''" t-field="line.product_id.l10n_in_hsn_code or ''"/> -->
+                                                 <span t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                                            </td>
+
+                                            <td>
+                                                <span t-field="line.product_uom_qty"/>
+                                            </td>
+
+                                            <td>
+                                                <span t-field="line.product_uom"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </t>
+                
+                                <tr>
+                                    <td colspan="3" style="text-align:center;padding:4px; border-right:none;border-top:1px solid black;">
+                                        <strong>Grand Total</strong>
+                                    </td>
+                                    <td colspan="3" style="text-align:left; padding: 4px;border-top:1px solid black;">
+                                        <t t-set="total_qty" t-value="sum(line.product_uom_qty for line in o.order_line)"/>
+                                         <t t-set="uom_name" t-value="o.order_line and o.order_line[0].product_uom.name or ''"/>
+                                        <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
+                                    </td>
+                                </tr>
+                                
+                            </tbody>
+                        </table>
+
+                    </div>
+                      
+                    <!-- Terms & Signature Block -->
+                    <div class="terms-signature" style="width:100%; border:1px solid black; box-sizing:border-box;">
+                        <!-- Left Column: Terms & Conditions -->
+                        <div style="display:inline-block; vertical-align:top; width:69%;box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                            <p t-field="o.notes" class="mt-4"/>
+                            <div class="oe_structure"/>
+                        </div>
+                        <!-- Right Column: Signature -->
+                        <div style="margin-top:30px; text-align:right;">
+                            <strong>for IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                            <strong>Authorised Signatory</strong>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t> 
+    </template>
+    
+    <!-- Paper Format -->
+    <record id="paperformat_purchase_indent" model="report.paperformat">
+        <field name="name">Purchase Indent Format</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+    </record>
+
+    <!-- Report Action -->
+    <record id="purchase_indent_report_action" model="ir.actions.report">
+        <field name="name">Impel Purchase Indent</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">impel_purchase.purchase_indent_report_view</field>
+        <field name="report_file">impel_purchase.purchase_indent_report_view</field>
+        <field name="paperformat_id" ref="impel_purchase.paperformat_purchase_indent"/>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

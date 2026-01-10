@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="purchase_order_report_inherit" inherit_id="purchase.report_purchaseorder_document">
+        <!-- Table details -->
+        <xpath expr="//table[@class='table table-sm o_main_table table-borderless mt-4']" position="replace" >
+            <table class="table" style="background-color: white; width: 100%; border: 1px solid black; font-size: 16px;">
+                <thead>
+                    <tr>
+                        <th class="text-center">S.N.</th>
+                        <th class="text-center">Description of Goods</th>
+                        <th class="text-center">HSN/SAC Code </th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-center">Unit</th>
+                        <th class="text-center">Price</th>
+                        <th class="text-center">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <t t-set="counter" t-value="1"/>
+                    <t t-foreach="o.order_line" t-as="line">
+                        <tr style="background-color: white; color:black;">
+                            <td class="text-center">
+                                <span t-esc="counter"/>
+                            </td>
+                            <td>
+                                <span t-field="line.product_id.display_name"/><br/>
+                                <span t-field="line.name"/>
+                            </td>
+                            <td>
+                                <t t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.product_uom_qty"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.product_uom"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.price_unit"/>
+                            </td>
+                            <!-- <td class="text-center">
+                                <span t-field="line.discount"/>
+                            </td> -->
+                            <td class="text-center">
+                                <span t-field="line.price_subtotal"/>
+                            </td>
+                        </tr>
+                        <t t-set="counter" t-value="counter + 1"/>
+                    </t>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//t[@t-call='purchase.document_tax_totals']" position="after">
+            <!-- <tr t-if="o.is_enabled_roundoff">
+                <td class="text-start">
+                    <strong>Round Off</strong>
+                </td>
+                <td class="text-end">
+                    <span t-esc="o.amount_roundoff"/>
+                </td>
+            </tr> -->
+            <tr t-if="o.is_enabled_roundoff" style="background-color: #ffffff !important; color: #000000 !important;">
+                <td class="text-start" style="background-color: #ffffff !important; color: #000000 !important;">
+                    <strong>Total (Rounded)</strong>
+                </td>
+                <td class="text-end" style="background-color: #ffffff !important; color: #000000 !important;">
+                    <span t-esc="o.amount_total_rounded" t-options='{"widget": "monetary", "display_currency": o.currency_id, "precision": 2}'/>
+                </td>
+            </tr>
+        </xpath>
+
+        <xpath expr="//div[@id='total']" position="after">
+            <div style="page-break-inside:avoid; border-top:1px solid black; margin-top:10px;">
+                <div class="row" style=" display:flex; font-weight: bold; padding-bottom: 4px;">
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;">Tax Name</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;">Tax Rate</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;">Taxable Amount</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;">Taxed Amount</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;">Total Tax</div>
+                    <div class="col-2"></div>
+                </div>
+
+                <!-- Tax Table Values -->
+                <t t-if="o.tax_totals">
+                    <t t-foreach="o.tax_totals['groups_by_subtotal'].items()" t-as="subtotal_group">
+                        <t t-set="subtotal_name" t-value="subtotal_group[0]"/>
+                        <t t-set="tax_lines" t-value="subtotal_group[1]"/>
+                        <!-- Loop through each tax -->
+                        <t t-foreach="tax_lines" t-as="tax_line">
+                            <div class="row" style="padding: 2px 0; display:flex;">
+                                
+                                <!-- Tax Name (IGST / CGST / SGST) -->
+                                <div class="col-2 ms-2" style="flex:1;">
+                                    <t t-esc="tax_line['tax_group_name'].split(' ')[0]"/>
+                                </div>
+                                <!-- Tax Rate -->
+                                <div class="col-2 ms-2" style="flex:1;">
+                                    <t t-set="tax_rate"
+                                    t-value="round(tax_line['tax_group_amount'] / tax_line['tax_group_base_amount'] * 100, 2)
+                                                if tax_line['tax_group_base_amount'] else 0"/>
+                                    <t t-esc="('%g' % tax_rate) + ' %'"/>
+                                </div>
+                                <!-- Taxable Amount -->
+                                <div class="col-2 ms-2" style="flex:1;">
+                                    <span t-esc="tax_line['tax_group_base_amount']"
+                                        t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </div>
+                                <!-- Taxed Amount -->
+                                <div class="col-2 ms-2" style="flex:1;">
+                                    <span t-esc="tax_line['tax_group_amount']"
+                                        t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </div>
+                                <!-- Total Tax (same as taxed amount here, or you can sum if multiple taxes per rate) -->
+                                <div class="col-2 ms-2" style="flex:1;">
+                                    <span t-esc="tax_line['tax_group_amount']"
+                                        t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </div>
+                                <div class="col-2"></div>
+                            </div>
+                        </t>
+                        <!-- Amount in Words -->
+                        <t t-if="o.amount_total">
+                            <div class="ms-2" style="margin-top: 3px; font-weight: bold; width:100%; display:inline-block;">
+                                <t t-set="grand_total" t-value="o.amount_total_rounded"/>
+                                <span t-esc="'Rupees ' + o.currency_id.amount_to_text(grand_total) + ' Only'"/>
+                            </div>
+                        </t>
+                    </t>
+                </t>
+            </div>
+        </xpath>
+
+        <!-- Code to add custom div after Payment terms block -->
+        <xpath expr="//p[@t-field='o.notes']" position="after">
+            <hr/>
+            <div style="page-break-inside: avoid;">
+                <div class="row">
+                    <div class="col-6 text-center">
+                       
+                    </div>
+                    <div class="col-6 text-center">
+                        <span><strong>For IMPETUS PROLIFIC PVT LTD</strong></span><br/><br/><br/><br/>
+                        
+                        <span><strong>Authorized Signatory</strong></span>
+                        <!-- <div t-if="o.user_id" class="col">
+                        <div t-field="o.user_id"/> -->
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Code to replace the shipped to address with the custom fields required -->
+        <xpath expr="//t[@t-call='web.external_layout']" position="inside">
+            <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
+                <t t-set="information_block">
+                    <strong class="d-block mb-1">Party Details</strong>
+                    
+                    <!-- Use contact widget only for address + name (no phone/vat) -->
+                    <div t-field="o.partner_id"
+                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True, "phone_icons": True}'/>
+                    <!-- Phone (if present) -->
+                    <t t-if="o.partner_id.phone">
+                        <div>
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                            <span t-esc="o.partner_id.phone"/>
+                        </div>
+                    </t>
+                    <!-- Mobile (if present) - inserted AFTER phone and BEFORE GSTIN -->
+                    <t t-if="o.partner_id.mobile">
+                        <div>
+                            <i class="fa fa-mobile" aria-hidden="true"></i>
+                            <span t-esc="o.partner_id.mobile"/>
+                        </div>
+                    </t>
+                    <!-- GSTIN / VAT (if present) -->
+                    <t t-if="o.partner_id.vat">
+                        <div>
+                            <strong>GSTIN / UIN: </strong><span t-esc="o.partner_id.vat"/>
+                        </div>
+                    </t>
+                </t>
+        </xpath>
+
+       <!-- Replace the address block so we can control the order of phone / mobile / GSTIN -->
+        <xpath expr="//t[@t-set='address']" position="replace">
+            <t t-set="address">
+                <strong class="d-block mb-1"></strong>
+                <div>
+                    <span>GR/RR No.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.gr_no"/></span><br/>
+                    <span>Transport Type&#160;&#160;&#160;: <t t-esc="o.transport"/></span><br/>
+                    <span>Vehicle No.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.vehicle_no"/></span><br/>
+                    <span>Station&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.partner_id.station"/></span><br/>
+                    <span>E-Way Bill No.&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.e_way_bill_no"/></span><br/>
+                    <span>Delivery Time&#160;&#160;&#160;&#160;&#160;&#160; : <t t-esc="o.effective_date.strftime('%d-%m-%Y') if o.effective_date else ''"/></span>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

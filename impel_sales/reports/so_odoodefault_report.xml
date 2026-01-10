@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   
+    <template id="report_views_inherit" inherit_id="sale.report_saleorder_document">
+       
+        <xpath expr="//t[@t-set='address']" position="replace"></xpath>
+
+        <!-- Addresses block -->
+        <xpath expr="//div[@class='page']/h2" position="after">
+            <div style="width:100%;">
+                <div style="display:inline-block; vertical-align:top; width:49%;">
+                    <!-- Left Column Content -->
+                    <span>
+                        <strong>
+                            <t t-if="doc.state in ['draft','sent']">Quotation No.:</t>
+                            <t t-else="">Order No.:</t>
+                        </strong>
+                        <t t-esc="doc.name"/>
+                    </span><br/>
+                    <span><strong>Date: </strong><t t-esc="doc.date_order.strftime('%d-%m-%Y') if doc.date_order else ''"/></span><br/>
+                    <span><strong>GR/RR No.:</strong><t t-esc="doc.gr_no"/></span><br/>
+                    <span><strong>Transport: </strong><t t-esc="doc.transport"/></span><br/>
+                    <span><strong>Vehicle No.:</strong><t t-esc="doc.vehicle_no"/></span>
+                </div>
+                <div style="display:inline-block; vertical-align:top; width:49%;">
+                    <!-- Right Column Content -->
+                    <span><strong>Station: </strong><t t-esc="doc.partner_id.station"/></span><br/>
+                    <span><strong>E-Way Bill No.: </strong><t t-esc="doc.way_bill_no"/></span><br/>
+                    <t t-if="doc.state != 'draft'">
+                        <span><strong>PO No.: </strong><t t-esc="doc.po_number"/></span><br/>
+                        <span><strong>PO Date: </strong><t t-esc="doc.po_date"/></span><br/>
+                        <span><strong>Transport Type: </strong><t t-esc="doc.transport_type"/></span>
+                    </t>
+                </div>
+            </div>
+            <hr/>
+            <div class="row mt-3 mb-3">
+                <!-- LEFT SIDE: ORDER TO -->
+                <div class="col-6" style="font-size:16px;">
+                    <strong>
+                        <t t-if="doc.state == 'draft'">Quotation to:</t>
+                        <t t-else="">Order to:</t>
+                    </strong><br/>
+
+                    <div t-field="doc.partner_id"
+                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}' />
+                    <!-- Show PAN only if it is a Quotation -->
+                        <t t-if="doc.state == 'draft' and doc.partner_invoice_id.l10n_in_pan">
+                            <p style="margin: 0; padding-top: 2px;">
+                                <strong>PAN:</strong>
+                                <span t-esc="doc.partner_invoice_id.l10n_in_pan"/>
+                            </p>
+                        </t>
+
+                    <t t-if="doc.partner_invoice_id.vat">
+                        <p style="margin: 0; padding-top: 2px;">
+                            <strong>GSTIN/UIN:</strong> 
+                            <span t-esc="doc.partner_invoice_id.vat"/>
+                        </p>
+                    </t>
+                </div>
+                <!-- RIGHT SIDE: SHIP TO -->
+                <div class="col-6" style="font-size:16px;">
+                    <strong>Shipped To:</strong><br/>
+                    <div t-field="doc.partner_id"
+                        t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}' />
+                     <!-- Show PAN only if it is a Quotation -->
+                        <t t-if="doc.state == 'draft' and doc.partner_invoice_id.l10n_in_pan">
+                            <p style="margin: 0; padding-top: 2px;">
+                                <strong>PAN:</strong>
+                                <span t-esc="doc.partner_invoice_id.l10n_in_pan"/>
+                            </p>
+                        </t>
+                    <t t-if="doc.partner_invoice_id.vat">
+                        <p style="margin: 0; padding-top: 2px;">
+                            <strong>GSTIN/UIN:</strong> 
+                            <span t-esc="doc.partner_invoice_id.vat"/>
+                        </p>
+                    </t>
+                </div>
+            </div>
+            <hr/>
+            <t t-if="doc.state != 'draft'">
+                <div>
+                    <p>We are pleased to receive the order for the following items:</p> 
+                </div>
+            </t>
+        </xpath>
+
+         <!-- Additional details block -->
+        <xpath expr="//div[@id='informations']" position="replace">
+        
+        </xpath>
+
+        <!-- Table details -->
+        <xpath expr="//table[hasclass('table')]" position="replace" >
+            <table class="table" style="background-color: white; width: 100%; border: 1px solid black; font-size: 16px;">
+                <thead>
+                    <tr>
+                        <th class="text-center">S.N.</th>
+                        <th class="text-center">Description of Goods</th>
+                        <th class="text-center">HSN/SAC Code </th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-center">Unit</th>
+                        <th class="text-center">Price</th>
+                        <th class="text-center">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <t t-set="counter" t-value="1"/>
+                    <t t-foreach="doc.order_line" t-as="line">
+                        <tr style="background-color: white; color:black;">
+                            <td class="text-center">
+                                <span t-esc="counter"/>
+                            </td>
+                            <td>
+                                <span t-field="line.product_id.display_name"/><br/>
+                                <span t-field="line.name"/>
+                            </td>
+                            <td>
+                                <t t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.product_uom_qty"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.product_uom"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="line.price_unit"/>
+                            </td>
+                            <!-- <td class="text-center">
+                                <span t-field="line.discount"/>
+                            </td> -->
+                            <td class="text-center">
+                                <span t-field="line.price_subtotal"/>
+                            </td>
+                        </tr>
+                        <t t-set="counter" t-value="counter + 1"/>
+                    </t>
+                    <!-- Total block after last product line -->
+                    <tr>
+                        <td style="background-color: white;" colspan="4" rowspan="7"></td>
+                    </tr>
+                    
+                    <tr style="background-color: white;">
+                        <t t-if="doc.state != 'draft' and doc.pf_percentage > 0">
+                            <td style="text-align: left; background-color: white;">
+                                <strong>P &amp; F charges
+                                <span>@</span>
+                                <t t-set="pf" t-value="doc.pf_percentage or 0"/>
+                                <span t-esc="pf >= 1 and pf or pf * 100"/>%</strong>
+                            </td>
+
+                            <td colspan="2">
+                                <span style="float: right; color:black;"
+                                    t-esc="doc.amount_pf"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </td>
+                        </t>
+                    </tr>
+                    <tr style="background-color: white;">
+                        <td style="text-align: left; background-color: white;">
+                            <strong>Sub Total:</strong>
+                            
+                        </td>
+                        <td colspan="2">
+                            <span style="float: right; color:black;" t-esc="doc.amount_untaxed"
+                                t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                        </td>
+                    </tr>
+                    <!-- <tr style="background-color: white;">
+                        <td style="text-align: left; background-color: white;">
+                            <t t-set="tax_name" t-value="''"/>
+                            <t t-foreach="doc.tax_totals['groups_by_subtotal'].items()" t-as="subtotal_group">
+                                <t t-foreach="subtotal_group[1]" t-as="tax_line">
+                                    <t t-if="'IGST' in tax_line['tax_group_name']">
+                                        <t t-set="tax_name" t-value="'IGST'"/>
+                                    </t>
+                                    <t t-elif="'CGST' in tax_line['tax_group_name'] or 'SGST' in tax_line['tax_group_name']">
+                                        <t t-set="tax_name" t-value="'GST'"/>
+                                    </t>
+                                </t>
+                            </t>
+
+                            <strong><span>Add : <t t-esc="tax_name or 'GST'"/></span>
+                            <span>@</span></strong>
+
+                            <t t-set="tax_label">GST</t>
+                            <t t-foreach="doc.order_line" t-as="line">
+                                <t t-foreach="line.tax_id" t-as="tax">
+                                    <t t-set="tax_label" t-value="tax.name.split(' ')[0]"/>
+                                </t>
+                            </t>
+                            <strong><span t-esc="tax_label"/></strong>
+                        </td>
+
+                        <td colspan="2">
+                            <t t-set="currency" t-value="doc.currency_id"/>
+
+                            <span style="float: right; color:black;" t-esc="doc.amount_tax"
+                                t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                        </td>
+                    </tr> -->
+                    <t t-set="cgst" t-value="0"/>
+                    <t t-set="sgst" t-value="0"/>
+                    <t t-set="igst" t-value="0"/>
+
+                    <t t-foreach="doc.order_line" t-as="line">
+                        <t t-foreach="line.tax_id" t-as="tax">
+                            <!-- Handle GST group tax -->
+                            <t t-if="tax.children_tax_ids">
+                                <t t-foreach="tax.children_tax_ids" t-as="child_tax">
+                                    <t t-if="'CGST' in child_tax.name">
+                                        <t t-set="cgst" t-value="child_tax.amount"/>
+                                    </t>
+                                    <t t-if="'SGST' in child_tax.name">
+                                        <t t-set="sgst" t-value="child_tax.amount"/>
+                                    </t>
+                                    <t t-if="'IGST' in child_tax.name">
+                                        <t t-set="igst" t-value="child_tax.amount"/>
+                                    </t>
+                                </t>
+                            </t>
+                            <!-- DIRECT IGST (not grouped) -->
+                            <t t-elif="'IGST' in tax.name">
+                                <t t-set="igst" t-value="tax.amount"/>
+                            </t>
+                        </t>
+                    </t>
+
+                    <t t-if="igst &gt; 0">
+                        <tr>
+                            <td><strong>Add : IGST @ <t t-esc="igst"/>%</strong></td>
+                            <td colspan="2" style="text-align:right;">
+                                <span t-esc="doc.amount_tax"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </td>
+                        </tr>
+                        <tr></tr>
+                    </t>
+
+                    <t t-if="igst == 0 and (cgst &gt; 0 or sgst &gt; 0)">
+                        <tr>
+                            <td><strong>Add : CGST @ <t t-esc="cgst"/>%</strong></td>
+                            <td colspan="2" style="text-align:right;">
+                                <span t-esc="doc.amount_tax / 2"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </td>
+                           
+                        </tr>
+
+                        <tr>
+                            <td><strong>Add : SGST @ <t t-esc="sgst"/>%</strong></td>
+                            <td colspan="2" style="text-align:right;">
+                                <span t-esc="doc.amount_tax / 2"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </td>
+                           
+                        </tr>
+                    </t>
+
+                    <tr style="background-color: white;">
+                        <td style="text-align: left; background-color: white;">
+                            <strong>Total:</strong>
+                            
+                        </td>
+                        <td colspan="2">
+                           <span style="float: right; color:black;" t-esc="doc.currency_id.round(doc.amount_total)"
+                                t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                        </td>
+                    </tr>
+                    <t t-if="doc.is_enabled_roundoff">
+                        <tr style="background-color: white;">
+                            <td style="text-align: left; background-color: white;">
+                                <strong>
+                                <span>
+                                    <t t-if="doc.amount_roundoff &gt; 0">Add : Round Off</t>
+                                    <t t-elif="doc.amount_roundoff &lt; 0">Less : Round Off</t>
+                                    <t t-else="">Round Off</t>
+                                </span>
+                                <span>@</span>
+                                </strong>
+                            </td>
+
+                            <td colspan="2">
+                                <span style="float: right; color:black;" t-esc="abs(doc.amount_roundoff)"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </td>
+                        </tr>
+                    </t>
+                    <tr style="background-color: white;">
+                        <td colspan="5" style="text-align: center; background-color: white;">
+                            <strong>Grand Total:</strong> 
+                        </td>
+                        <td colspan="2" style="text-align: center; background-color: white;">
+                            <t t-if="doc.is_enabled_roundoff">
+                                <!-- If roundoff is applied -->
+                                <span t-esc="doc.amount_total_rounded"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </t>
+
+                            <t t-elif="doc.pf_percentage > 0">
+                                <!-- If P&F is applied -->
+                                <span t-esc="doc.amount_total_with_pf"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </t>
+
+                            <t t-else="">
+                                <!-- Default amount total -->
+                                <span t-esc="doc.amount_total"
+                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </t>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr/>
+            <div style="page-break-inside:avoid;">
+                <div class="row" style=" display:flex; font-weight: bold; padding-bottom: 4px;">
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline;font-size:16px;">Tax Name</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline; font-size:16px;">Tax Rate</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline; font-size:16px;">Taxable Amount</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline; font-size:16px;">Taxed Amount</div>
+                    <div class="col-2 ms-2" style="flex:1; text-decoration: underline; font-size:16px;">Total Tax</div>
+                    <div class="col-2"></div>
+                </div>
+
+                <!-- Tax Table Values -->
+               
+                <t t-if="doc.tax_totals">
+                    <t t-foreach="doc.tax_totals['groups_by_subtotal'].items()" t-as="subtotal_group">
+                        <t t-set="subtotal_name" t-value="subtotal_group[0]"/>
+                        <t t-set="tax_lines" t-value="subtotal_group[1]"/>
+                        <!-- Loop through each tax -->
+                        <t t-foreach="tax_lines" t-as="tax_line">
+                            <div class="row" style="padding: 2px 0; display:flex;">
+                                
+                                <!-- Tax Name -->
+                                <div class="col-2 ms-2" style="flex:1; font-size:16px;">
+                                    <!-- Only split if the tax group name is exactly "GST" -->
+                                    <t t-if="tax_line['tax_group_name'] == 'GST'">
+                                        <div style="min-height:22px;">CGST</div>
+                                        <div style="min-height:22px;">SGST</div>
+                                    </t>
+                                    <t t-else="">
+                                        <div style="min-height:44px;">
+                                            <t t-esc="tax_line['tax_group_name']"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                
+                                <!-- Tax Rate -->
+                                <div class="col-2 ms-2" style="flex:1; font-size:16px;">
+                                    <t t-set="tax_rate" t-value="0"/>
+                                    <t t-foreach="doc.order_line" t-as="line_lookup">
+                                        <t t-if="line_lookup.tax_id and tax_line['tax_group_name'] in line_lookup.tax_id.mapped('tax_group_id.name')">
+                                            <t t-set="tax_rate" t-value="line_lookup.tax_id[0].amount"/>
+                                        </t>
+                                    </t>
+                                    <t t-if="tax_line['tax_group_name'] == 'GST'">
+                                        <div style="min-height:22px;">
+                                            <t t-esc="str(int(tax_rate/2)) + ' %'"/>
+                                        </div>
+                                        <div style="min-height:22px;">
+                                            <t t-esc="str(int(tax_rate/2)) + ' %'"/>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div style="min-height:44px;">
+                                            <t t-esc="str(int(tax_rate)) + ' %'"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                
+                                <!-- Taxable Amount -->
+                                <div class="col-2 ms-2" style="flex:1; font-size:16px;">
+                                    <t t-if="tax_line['tax_group_name'] == 'GST'">
+                                        <span t-esc="tax_line['tax_group_base_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/><br/>
+                                        <span t-esc="tax_line['tax_group_base_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="tax_line['tax_group_base_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                </div>
+                                
+                                <!-- Taxed Amount -->
+                                <div class="col-2 ms-2" style="flex:1;font-size:16px; ">
+                                    <t t-if="tax_line['tax_group_name'] == 'GST'">
+                                        <span t-esc="tax_line['tax_group_amount']/2"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/><br/>
+                                        <span t-esc="tax_line['tax_group_amount']/2"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="tax_line['tax_group_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                </div>
+                                
+                                <!-- Total Tax -->
+                                <div class="col-2 ms-2" style="flex:1; font-size:16px;">
+                                    <t t-if="tax_line['tax_group_name'] == 'GST'">
+                                        <span t-esc="tax_line['tax_group_amount']/2"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/><br/>
+                                        <span t-esc="tax_line['tax_group_amount']/2"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="tax_line['tax_group_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                    </t>
+                                </div>
+                                
+                                <div class="col-2 ms-2" style="flex:1; font-size:16px;"></div>
+                            </div>
+                        </t>
+                    </t>
+                </t>
+
+                <t t-if="doc.amount_total">
+                    <div class="ms-2" style="margin-top: 10px; font-weight: bold; font-size:16px; width:100%; display:inline-block;">
+                        <t t-set="grand_total"
+                        t-value="doc.amount_total_rounded if doc.is_enabled_roundoff else (doc.amount_total_with_pf if doc.pf_percentage > 0 else doc.amount_total)"/>
+                        <!-- Convert that total to words -->
+                        <span t-esc="'Rupees ' + doc.currency_id.amount_to_text_indian(grand_total) + ' Only'"/>
+                    </div>
+                </t>
+            </div>
+
+            <hr/>
+            <div class="row ms-2" style="page-break-inside: avoid; ">
+                <!-- <span t-field="o.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.company_id.terms_type != 'html' else ''}" name="order_note"/> -->
+                <!-- <p t-if="not is_html_empty(doc.payment_term_id.note)">
+                    <span t-field="doc.payment_term_id.note"></span>
+                </p> -->
+                
+                <!-- Bank Details Block -->
+                <div  class="bank-details" style="width:100%; page-break-inside: avoid; ">
+                    <div style="display:inline-block; vertical-align:top; width:100%; text-align:center;margin-top: 10px;">
+                        <span style="font-size:20px;"><u><strong>Bank Details</strong></u></span><br/><br/>
+                        <t t-if="doc.company_id.bank_ids">
+                            <t t-set="primary_bank" t-value="doc.company_id.bank_ids[0]"/>
+                            <span t-esc="primary_bank.bank_name"/> <span>=</span> 
+                            <span t-esc="primary_bank.bank_id.street"/><span>, </span><span t-esc="primary_bank.bank_id.city"/><span>,</span> 
+                            <span>A/C No.</span> <span t-esc="primary_bank.acc_number"/><span>,</span> 
+                            <span>IFSC Code </span><span t-esc="primary_bank.bank_id.bic"/>
+                        </t>
+                        <t t-else="">
+                            <div>No bank details available.</div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+        </xpath>
+
+        <xpath expr="//div[span[@t-field='doc.note']]" position="replace">
+           <div class="terms-signature" style="width:100%; ">
+                <!-- Left Column: Terms / Notes -->
+                <div style="display:inline-block; vertical-align:top; width:69%; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                    <span t-field="doc.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if doc.company_id.terms_type != 'html' else ''}" name="order_note"/>
+                    <p t-if="not is_html_empty(doc.payment_term_id.note)">
+                        <span t-field="doc.payment_term_id.note">The payment should also be transmitted with love</span>
+                    </p>
+                    <div class="oe_structure"/>
+                </div>
+                <!-- Right Column: Signature -->
+                <div style="display:inline-block; vertical-align:top; width:30%; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                    
+                    <div style="margin-top:10px; text-align:left;">
+                        <strong>For IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                        <strong>Authorised Signatory</strong>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Code to make the in-built total block invisible and replace with the desired customized code -->
+        <xpath expr="//div[hasclass('clearfix')]" position="replace" >
+            <div id="total"></div>
+        </xpath>
+        <!-- Remove the default sale order number to prevent duplication -->
+        <xpath expr="//h2[hasclass('mt-4')]" position="replace" >
+        </xpath>
+        
+   </template>
+
+    <!-- <record id="paperformat_sales_quotation" model="report.paperformat">
+        <field name="name"> PDF Quote</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">35</field>
+        <field name="margin_bottom">42</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">35</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="paperformat_id" ref="robin_plance.paperformat_sales_quotation"/>
+    </record> -->
+
+</odoo>

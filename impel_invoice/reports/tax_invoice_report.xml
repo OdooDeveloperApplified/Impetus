@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Document Layout template -->
+    <template id="document_layout_custom_invoice" >
+        <t t-call="web.basic_layout">
+            <!-- HEADER -->
+            <div class="o_boxed_header" style="text-align:center; line-height:1.4;border: 1px solid black; box-sizing: border-box; margin: 0; border-bottom:none;"> 
+               <div style="width:100%; overflow:hidden;">
+                    <div class="ms-2" style="float:left; text-align:left; font-weight:bold; color:#000;">
+                        <t t-if="res_company.vat">
+                            GSTIN: <t t-esc="res_company.vat"/>
+                        </t>
+                    </div>
+                    <div style="float:right; text-align:right; font-weight:bold; color:#000;margin-right:10px;">
+                        Original Copy
+                    </div>
+                </div>                
+               <strong><p style="text-align:center; font-size:20px; width:15%; margin: 0 auto; padding-bottom:5px;">Tax Invoice</p></strong>                
+            </div>
+
+            <!-- Inner content -->
+            <div>
+                <t t-out="0"/>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer" style="text-align:center; border-top:1px solid #000; padding-top:5px;">
+            </div>
+        </t>
+    </template>
+
+    <!-- Report content section (Inner content) -->
+    <template id="tax_invoice_report_view">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="impel_invoice.document_layout_custom_invoice">
+                    <style>
+                        /* Force border to appear on every physical page in PDF */
+                        @page {
+                            margin: 5mm;
+                            /* draw a 1px black border around every page */
+                            border: 1px solid black;
+                        }
+
+                        /* Keep your existing .page styling untouched */
+                        .page {
+                            
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        /* Ensure header/footer overlap with border */
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
+                    </style>
+
+                    <div class="page" style="border: 1px solid black; border-bottom:none; margin: 0;">
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            
+                            <!-- Information block -->
+                            <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px;">
+                                <!-- Left Column Content -->
+                                <span>Invoice No.: <t t-esc="o.name"/></span><br/>
+                                <span>Dated: <t t-esc="o.invoice_date.strftime('%d-%m-%Y') if o.invoice_date else ''"/></span><br/>
+                                <span>Place of Supply:<t t-esc="o.partner_id.state_id.name"/></span><br/>
+                                <span>Reverse Charge: <t t-esc="o.transport"/></span><br/>
+                            </div>
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px;">
+                                <!-- Right Column Content -->
+                                <span>Transport: <t t-esc="o.transport"/></span><br/>
+                                <span>E-Way Bill No.: <t t-esc="o.way_bill_no"/></span><br/>
+                                <span>Po Numbe: <t t-esc="o.po_number"/></span><br/>
+                                <span>Po Date: <t t-esc="o.po_date"/></span><br/>
+                            </div>
+                        </div>
+
+                        <!-- Address block -->
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            <!-- Left Column -->
+                            <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                                <strong>Billed to :</strong><br/>
+                                <t t-esc="o.partner_id.name"/><br/>
+                                <t t-esc="o.partner_id.street"/><br/>
+                                <t t-esc="o.partner_id.street2"/><br/>
+                                <t t-esc="o.partner_id.city"/><br/>
+                                <t t-esc="o.partner_id.state_id.name"/>-<t t-esc="o.partner_id.zip"/><br/>
+                                <span>Party PAN: <t t-esc="o.partner_id.l10n_in_pan"/></span><br/>
+                                <span>Party Mobile No: <t t-esc="o.partner_id.mobile"/></span><br/>
+                                <span>State: <t t-esc="o.partner_id.state_id.name"/></span><br/>
+                                <span>GSTIN / UIN: <t t-esc="o.partner_id.vat"/></span><br/>
+                            </div>
+                            <!-- Right Column -->
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                                <strong>Shipped to:</strong><br/>
+                                <t t-esc="o.partner_shipping_id.name"/><br/>
+                                <t t-esc="o.partner_shipping_id.street"/><br/>
+                                <t t-esc="o.partner_shipping_id.street2"/><br/>
+                                <t t-esc="o.partner_shipping_id.city"/><br/>
+                                <t t-esc="o.partner_shipping_id.state_id.name"/>-<t t-esc="o.partner_id.zip"/><br/>
+                                <span>Party PAN: <t t-esc="o.partner_shipping_id.l10n_in_pan"/></span><br/>
+                                <span>Party Mobile No: <t t-esc="o.partner_shipping_id.mobile"/></span><br/>
+                                <span>State: <t t-esc="o.partner_shipping_id.state_id.name"/></span><br/>
+                                <span>GSTIN / UIN: <t t-esc="o.partner_shipping_id.vat"/></span><br/>
+                            </div>
+                        </div>
+
+                        <!-- Empty Row -->
+                        <div class="row p-2">
+                            <div class="col-12">
+                                <span style="margin:0;vertical-align:middle;">Service report no=</span>
+                            </div>
+                        </div>
+
+                        <style>
+                            table.only-column-borders {
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+
+                            /* Regular column borders */
+                            table.only-column-borders th,
+                            table.only-column-borders td {
+                                border-right: 1px solid black;
+                            }
+
+                            /* Top border for header row */
+                            table.only-column-borders tr:first-child th {
+                                border-top: 1px solid black;
+                            }
+
+                            /* Bottom border for last row */
+                            table.only-column-borders tr:last-child td {
+                                border-bottom: 1px solid black;
+                            }
+
+                            /* Remove right border from last column (both header body) */
+                            table.only-column-borders th:last-child,
+                            table.only-column-borders td:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Remove any border-right from header row overrides */
+                            table.only-column-borders thead tr th:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Optional: remove any full-row border applied directly on in header */
+                            table.only-column-borders thead tr {
+                                border-right: none !important;
+                            }
+                        </style>
+
+                        <t t-set="counter" t-value="0"/>
+                        <table class="table table-sm o_main_table table-borderless only-column-borders" style="width:100%; color:black;">
+                            <thead style="display: table-row-group">
+                                <tr style="text-align: center;border: 1px solid black; border-left:none;">
+                                    <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                                    <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                                    <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                                    <th class="text-start" style="width: 12%;vertical-align:center">Optional Field 1</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Unit</th>
+                                    <th class="text-start" style="width: 10%;vertical-align:center">Price</th>
+                                    <th class="text-start" style="width: 9%;vertical-align:center">Amount(`)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- <t t-set="lines" t-value="o.invoice_line_ids.filtered(lambda l: not l.display_type).sorted(key=lambda l: l.sequence)"/> -->
+                                <t t-set="counter" t-value="0"/>
+
+                                <!-- <t t-foreach="lines" t-as="line"> -->
+                                <t t-foreach="o.invoice_line_ids" t-as="line">
+                                    <t t-set="counter" t-value="counter + 1"/>
+                                    <tr>
+                                        <!-- S.N. -->
+                                        <td style="text-align: center;">
+                                            <t t-esc="counter"/>
+                                        </td>                                        
+                                        <!-- Description -->
+                                        <td>
+                                            <span t-field="line.name"/>
+                                        </td>
+                                        <!-- HSN/SAC -->
+                                        <td>
+                                            <t t-esc="line.product_id.l10n_in_hsn_code or ''"/>
+                                        </td>
+                                        <!-- Optional Field 1 -->
+                                        <td></td>
+                                        <!-- Quantity -->
+                                        <td class="text-end">
+                                            <span t-field="line.quantity"/>
+                                        </td>
+                                        <!-- Unit -->
+                                        <td class="text-center">
+                                            <span t-field="line.product_uom_id.name"/>
+                                        </td>
+                                        <!-- Unit Price -->
+                                        <td class="text-end">
+                                            <span t-esc="line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                        <!-- Amount -->
+                                        <td class="text-end">
+                                            <span t-esc="line.price_subtotal" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Totals Section -->
+                                <t t-set="currency" t-value="o.currency_id"/>
+                                <tr>
+                                    <td colspan="7" style="text-align: left;padding:4px; border-top: 1px solid black;">
+                                        <!-- <strong>Total Without GST</strong> -->
+                                    </td>
+                                    <td style="text-align: right;padding:4px; border-top: 1px solid black;">
+                                        <strong><span t-esc="o.amount_untaxed" t-options="{'widget': 'monetary', 'display_currency': currency}"/></strong>
+                                    </td>
+                                </tr>
+
+                                <!-- Add P&F row only if percentage > 0 -->
+                                <!-- <t t-if="o.pf_percentage > 0"> -->
+                                    <tr>
+                                        <td colspan="4" style="text-align:right;padding:4px; border:none;">
+                                            <span>Add : P &amp; F Charges</span>
+                                        </td>
+                                        <td colspan="1" style="text-align:right;padding:4px; border:none;">
+                                            <!-- <span>@</span> -->
+                                        </td>
+                                        <td colspan="2" style="text-align:left;padding:4px;">
+                                            <!-- <span t-esc="o.pf_percentage if o.pf_percentage >= 1 else o.pf_percentage * 100"/>% -->
+                                        </td>
+                                        <td colspan="1" style="text-align: right; padding:4px;">
+                                            <!-- <span t-esc="o.amount_pf" t-options="{'widget': 'monetary', 'display_currency': currency}"/> -->
+                                        </td>
+                                    </tr>
+                                <!-- </t> -->
+
+                                <!-- Add GST -->
+                                <tr>
+                                    <td colspan="4" style="text-align:right; padding-right:65px; border-right:none">
+                                        <span>Add : IGST</span> 
+                                    </td>
+                                    <td colspan="2" style="text-align:right; border-right:none;">
+                                            <span>@</span>
+                                        </td>
+                                    <td colspan="1" style="text-align:center;padding:4px;">
+                                        <t t-set="tax_label">GST</t>
+                                        <t t-foreach="o.invoice_line_ids" t-as="line">
+                                            <t t-foreach="line.tax_ids" t-as="tax">
+                                                <t t-set="tax_label" t-value="tax.name.split(' ')[0]"/>
+                                            </t>
+                                        </t>
+                                        <span t-esc="tax_label"/>
+                                    </td>
+                                    <td colspan="1" style="text-align: right;padding:4px;">
+                                        <span t-esc="o.amount_tax" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Add Roundoff -->
+                                <!-- <t t-if="o.is_enabled_roundoff"> -->
+                                    <!-- <tr style="border-bottom:1px solid black;">
+                                        <td colspan="4" style="text-align:right;padding:4px; border:none;">
+                                            <span>
+                                                <t t-if="o.amount_roundoff &gt; 0">Add : Round Off</t>
+                                                <t t-elif="o.amount_roundoff &lt;0">Less : Round Off</t>
+                                                <t t-else="">Round Off</t>
+                                            </span>
+                                        </td>
+                                        <td colspan="1" style="text-align:right;padding:4px; border:none;">
+                                            <span>@</span>
+                                        </td>
+                                        <td colspan="2" style="text-align:left;padding:4px;">
+                                            <span t-esc="o.pf_percentage if o.pf_percentage >= 1 else o.pf_percentage * 100"/>%
+                                        </td>
+                                        <td colspan="1" style="text-align: right; padding:4px; border-bottom:1px solid black; ">
+                                            <span t-esc="abs(o.amount_roundoff)" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                        </td>
+                                    </tr> -->
+                                <!-- </t> -->
+
+                                <tr>
+                                    <td colspan="4" style="text-align:right; padding:4px; border-right:none; border-top:1px solid black; border-bottom:none;">
+                                        <strong>Grand Total</strong>
+                                    </td>
+                                    <td colspan="1" style="text-align:right; border-right:none; border-top:1px solid black;">
+                                        <t t-set="total_qty" t-value="sum(line.quantity for line in o.invoice_line_ids)"/>
+                                        <strong><span t-esc="total_qty"/></strong>
+                                    </td>
+                                    <td colspan="2" style="text-align:left; border-right:none; border-top:1px solid black; border-bottom:none;">
+                                        <t t-set="uom_name" t-value="o.invoice_line_ids and o.invoice_line_ids[0].product_uom_id.name or ''"/>
+                                        <strong><span t-esc="uom_name"/></strong>
+                                    </td>
+                                    <td colspan="1" style="text-align:right; border-left:1px solid black; border-top:1px solid black;">
+                                        <strong><span t-esc="o.amount_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/></strong>
+                                    </td>                                    
+                                </tr>                                
+                            </tbody>
+                        </table>
+                        
+                        <div style="page-break-inside:avoid;">
+                            <div class="row" style=" display:flex; font-weight: bold; padding-bottom: 4px; gap:0;">
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">HSN/SAC</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Tax Rate</div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Taxable Amt.</div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">IGST Amt.</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline; margin:0; padding:0;">Total Tax</div>
+                                <div class="col-6"></div>
+                            </div>
+
+                            <!-- Tax Table Values -->
+
+                            <!-- <div class="row" style="font-weight:bold; padding-top:4px; margin-top:4px; padding-bottom:10px;">
+                                <div class="col-1 ms-2" style="flex:2; text-decoration:underline;">Total</div>
+                                <div class="col-1 ms-2" style="flex:1;"></div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration:underline;">
+                                    <t t-esc="total_qty"/>
+                                </div>
+                                <div class="col-1 ms-2" style="flex:1;"></div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration:underline;">
+                                    <t t-esc="total_amount"/>
+                                </div>                                
+                            </div> -->
+                        </div>
+
+                        <!-- Bank Details Block -->
+                        <div  class="bank-details" style="width:100%; border-top:1px solid black; border-bottom:none;margin-top:5px; page-break-inside: avoid; padding-top:4px; padding-bottom:4px;">
+                            <div style="display:inline-block; vertical-align:top; width:100%; box-sizing:border-box; text-align:center;">
+                                <span style="font-size:20px;"><u><strong>Bank Details</strong></u></span><br/><br/>
+                                <t t-if="o.company_id.bank_ids">
+                                    <t t-set="primary_bank" t-value="o.company_id.bank_ids[0]"/>
+                                    <span t-esc="primary_bank.bank_name"/> = 
+                                    <span t-esc="primary_bank.bank_id.street"/>, <span t-esc="primary_bank.bank_id.city"/>, 
+                                    A/C No. <span t-esc="primary_bank.acc_number"/>, 
+                                    IFSC Code <span t-esc="primary_bank.bank_id.bic"/>
+                                </t>
+                                <t t-else="">
+                                    <div>No bank details available.</div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Terms & Signature Block -->
+                        <div class="terms-signature" style="width:100%; border:1px solid black; box-sizing:border-box;">
+                        <!-- Left Column: Terms / Notes -->
+                        <div style="display:inline-block;vertical-align:top; width:59%;box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                            <span t-field="o.narration"/>
+                            <div class="oe_structure"/>
+                        </div>
+
+                        <!-- Right Column: Signature -->
+                        <div style="display:inline-block; border-left:1px solid black;vertical-align:top; width:40%;  padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                            <div class="row" style="margin-top:10px; text-align:left;border-bottom:1px solid black;">
+                                <div class="col-12">
+                                    <strong>Receiver's Signature:</strong><br/><br/><br/>
+                                    
+                                </div>
+                            </div>
+                            <div class="row" style="margin-top:10px; text-align:right;">
+                                <div class="col-12">
+                                    <strong>For IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                                    <strong>Authorised Signatory</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        <!-- <div class="row" style="border-bottom:1px solid black; border-top:1px solid black;">
+                            <div class="col-5" style="border-right:1px solid black; border- font-size:12px;">
+                                <div class="mb-3" t-attf-style="#{'text-align:justify;text-justify:inter-word;padding-top:10px;' if o.company_id.terms_type != 'html' else ''}" t-if="not is_html_empty(o.narration)" name="comment">
+                                    <span style="font-weight:bold; display:inline;"><u>Terms &amp; Conditions</u></span>
+                                    <span t-field="o.narration" style="margin:0; padding:0; display:inline;"/>
+                                </div>
+                            </div>
+
+                            <div class="col-7" style="border-left:1px solid black;">
+                                <div class="row" style="padding-top:10px; font-size:16px; border-bottom:1px solid black; box-sizing:border-box; height:140px;">
+                                    <div class="col-12">
+                                        <span style="font-weight:bold;">Receiver's Signature :</span>                                        
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div style="text-align:right; line-height:90px;">
+                                            <span><strong>For IMPETUS PROLIFIC PVT LTD</strong></span><br/>
+                                            <span style="font-weight:bold;">Authorised Signatory</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Code to set desried paper format for Sale order -->
+    <record id="paperformat_tax_invoice_custome" model="report.paperformat">
+        <field name="name">TAX INVOICE</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">15</field>
+        <field name="margin_bottom">20</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Report Action -->
+    <record id="tax_invoice_report_action" model="ir.actions.report">
+        <field name="name">Tax Invoice Report</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">impel_invoice.tax_invoice_report_view</field>
+        <field name="report_file">impel_invoice.tax_invoice_report_view</field>
+        <field name="attachment" eval="False"/> 
+        <field name="paperformat_id" ref="impel_invoice.paperformat_tax_invoice_custome"/>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

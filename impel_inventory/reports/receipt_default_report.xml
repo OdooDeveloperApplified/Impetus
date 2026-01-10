@@ -1,0 +1,286 @@
+<odoo>
+    <template id="receipt_report_views_inherit" inherit_id="stock.report_delivery_document">
+
+        <!-- code to add the following custom fields after the vendor/customer/warehouse addresses block -->
+        <xpath expr="//t[@t-set='information_block']" position="before">
+            <t t-set="purchase_order" t-value="o.purchase_id"/>
+            <hr/>
+            <div class="row">
+                <div class="col-7">
+                    <span><strong>No.: </strong><t t-esc="o.name"/></span><br/>
+                    <span><strong>Date: </strong><t t-esc="purchase_order.date_order.strftime('%d-%m-%Y') if purchase_order.date_order else ''"/></span><br/>
+                    <span><strong>GR/RR No.:</strong><t t-esc="purchase_order.gr_no or ''"/></span><br/>
+                    <span><strong>Transport: </strong><t t-esc="purchase_order.transport or ''"/></span>
+                </div>
+                <div class="col-5">
+                    <span><strong>Vehicle No.:</strong><t t-esc="purchase_order.vehicle_no or ''"/></span><br/>
+                    <span><strong>Station: </strong><t t-esc="o.partner_id.station"/></span><br/>
+                    <span><strong>E-Way Bill No.: </strong><t t-esc="purchase_order.e_way_bill_no"/></span><br/>
+                    <span t-if="o.origin"><strong>Order:</strong><t t-esc="o.origin"/></span>
+                </div>
+            </div>
+            <hr/>
+        </xpath>
+
+        <!-- code to hide the receipt/delivery name -->
+        <xpath expr="//h2[span[@t-field='o.name']]" position="replace"/>
+
+        <!-- code to hide related so/po number -->
+        <xpath expr="//div[contains(@class,'report-wrapping-flexbox')]" position="replace"/>
+
+        <!-- code to replace the Table details -->
+        <xpath expr="//table[@name='stock_move_table']" position="replace">
+            <t t-set="counter" t-value="0"/>
+            <table class="table table-sm" t-if="o.state!='done'" name="stock_move_table">
+                <thead style="display: table-row-group">
+                    <tr style="text-align: center;;">
+                        <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                        <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                        <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Received</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Unit</th>
+                        <th class="text-start" style="width: 10%;vertical-align:center">Price</th>
+                        <th class="text-start" style="width: 19%;vertical-align:center">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="o.move_ids_without_package" t-as="line">
+                        <!-- Normal Product Line -->
+                        <t>
+                            <t t-set="counter" t-value="counter + 1"/>
+                            <tr>
+                                <td style="text-align:center;"><t t-esc="counter"/></td>
+                                <td><t t-esc="line.product_id.display_name or ''"/></td>
+                                <td><t t-esc="line.product_id.l10n_in_hsn_code or ''"/></td>
+                                <td style="text-align:center;"><t t-esc="line.product_uom_qty"/></td>
+                                <td style="text-align:center;"><t t-esc="line.quantity"/></td>
+                                <td><t t-esc="line.product_uom.name or ''"/></td>
+                                <td style="text-align:right;"><t t-esc="line.purchase_line_id.price_unit if line.purchase_line_id else ''"/></td>
+                                <td style="text-align:right;">
+                                    <t t-if="line.purchase_line_id">
+                                        <t t-set="subtotal"
+                                        t-value="line.purchase_line_id.price_unit * line.quantity * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                        <t t-esc="subtotal"/>
+                                    </t>
+                                    <t t-else="">
+                                        0.00
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+
+                    <!-- Totals Section -->
+                    <t t-set="currency" t-value="(o.purchase_id.currency_id or o.company_id.currency_id)[:1]"/>
+                    <t t-set="total_subtotal" t-value="0.0"/>
+                    <t t-set="total_qty" t-value="0.0"/>
+                    <t t-foreach="o.move_ids_without_package" t-as="line">
+                        <t t-if="line.purchase_line_id">
+                            <t t-set="line_subtotal" t-value="(line.purchase_line_id.price_unit or 0.0) * (line.quantity or 0.0) * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                            <t t-set="total_subtotal" t-value="total_subtotal + line_subtotal"/>
+                        </t>
+                        <t t-set="total_qty" t-value="total_qty + (line.quantity or 0.0)"/>
+                    </t>
+
+                    <!-- Grand Total Row -->
+                    <tr>
+                        <td colspan="4" style="text-align:center;padding:4px; border-right:none; border-top:1px solid black;">
+                            <strong>Grand Total</strong>
+                        </td>
+                        <td colspan="3" style="text-align:left; padding: 4px; border-top:1px solid black;">
+                            <t t-set="uom_name" t-value="o.move_ids_without_package and o.move_ids_without_package[0].product_uom.name or ''"/>
+                            <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
+                        </td>
+                        <td colspan="1" style="text-align: right;padding:4px; border-top:1px solid black;">
+                            <t t-set="grand_total" t-value="total_subtotal"/>
+                            <span t-esc="grand_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+        <xpath expr="//table[@name='stock_move_line_table']" position="replace">
+            <table class="table table-sm mt48" t-elif="o.move_line_ids and o.state=='done'">
+                <thead style="display: table-row-group">
+                    <tr style="text-align: center;">
+                        <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                        <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                        <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Received</th>
+                        <th class="text-start" style="width: 8%;vertical-align:center">Unit</th>
+                        <th class="text-start" style="width: 10%;vertical-align:center">Price</th>
+                        <th class="text-start" style="width: 19%;vertical-align:center">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="o.move_ids_without_package" t-as="line">
+                        <!-- Normal Product Line -->
+                        <t>
+                            <t t-set="counter" t-value="counter + 1"/>
+                            <tr>
+                                <td style="text-align:center;"><t t-esc="counter"/></td>
+                                <td><t t-esc="line.product_id.display_name or ''"/></td>
+                                <td><t t-esc="line.product_id.l10n_in_hsn_code or ''"/></td>
+                                <td style="text-align:center;"><t t-esc="line.product_uom_qty"/></td>
+                                <td style="text-align:center;"><t t-esc="line.quantity"/></td>
+                                <td><t t-esc="line.product_uom.name or ''"/></td>
+                                <td style="text-align:right;"><t t-esc="line.purchase_line_id.price_unit if line.purchase_line_id else ''"/></td>
+                                <td style="text-align:right;">
+                                    <t t-if="line.purchase_line_id">
+                                        <t t-set="subtotal"
+                                        t-value="line.purchase_line_id.price_unit * line.quantity * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                        <t t-esc="subtotal"/>
+                                    </t>
+                                    <t t-else="">
+                                        0.00
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                    <!-- Totals Section -->
+                    <t t-set="currency" t-value="(o.purchase_id.currency_id or o.company_id.currency_id)[:1]"/>
+                    <t t-set="total_subtotal" t-value="0.0"/>
+                    <t t-set="total_qty" t-value="0.0"/>
+                    <t t-foreach="o.move_ids_without_package" t-as="line">
+                        <t t-if="line.purchase_line_id">
+                            <t t-set="line_subtotal" t-value="(line.purchase_line_id.price_unit or 0.0) * (line.quantity or 0.0) * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                            <t t-set="total_subtotal" t-value="total_subtotal + line_subtotal"/>
+                        </t>
+                        <t t-set="total_qty" t-value="total_qty + (line.quantity or 0.0)"/>
+                    </t>
+                    <!-- Grand Total Row -->
+                    <tr>
+                        <td colspan="4" style="text-align:center;padding:4px; border-right:none; border-top:1px solid black;">
+                            <strong>Grand Total</strong>
+                        </td>
+                        <td colspan="3" style="text-align:left; padding: 4px; border-top:1px solid black;">
+                            <t t-set="uom_name" t-value="o.move_ids_without_package and o.move_ids_without_package[0].product_uom.name or ''"/>
+                            <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
+                        </td>
+                        <td colspan="1" style="text-align: right;padding:4px; border-top:1px solid black;">
+                            <t t-set="grand_total" t-value="total_subtotal"/>
+                            <span t-esc="grand_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr/>
+            <!-- code to add HSN summary section -->
+            <div style="page-break-inside:avoid;">
+                <t t-set="hsn_summary"  t-value="o.get_hsn_summary()"/>
+                
+                <t t-set="total_qty" t-value="0.0"/>
+                <t t-set="total_amount" t-value="0.0"/>
+                <t t-set="total_cgst" t-value="0.0"/>
+                <t t-set="total_sgst" t-value="0.0"/>
+
+                <!-- HEADER -->
+                <div class="row fw-bold border-bottom pb-1">
+                    <div class="col-1">HSN/SAC</div>
+                    <div class="col-1">Tax Rate</div>
+                    <div class="col-1">Main Qty</div>
+                    <div class="col-1">UQC</div>
+                    <div class="col-2 text-end">Taxable Amt.</div>
+                    <div class="col-2 text-end">CGST Amt.</div>
+                    <div class="col-2 text-end">SGST Amt.</div>
+                    <div class="col-2 text-end">Total Tax</div>
+                </div>
+
+                <!-- LINES -->
+                <t t-foreach="hsn_summary.items()" t-as="h">
+                    <t t-set="total_qty" t-value="total_qty + (h[1]['qty'] or 0.0)"/>
+                    <t t-set="total_amount" t-value="total_amount + (h[1]['amount'] or 0.0)"/>
+                    <t t-set="total_cgst" t-value="total_cgst + (h[1]['cgst'] or 0.0)"/>
+                    <t t-set="total_sgst" t-value="total_sgst + (h[1]['sgst'] or 0.0)"/>
+
+                    <div class="row py-1 border-bottom">
+                        <div class="col-1">
+                            <t t-esc="h[0]"/>
+                        </div>
+
+                        <div class="col-1">
+                            <t t-esc="str(int(h[1]['tax_rate'])) + '%'"/>
+                        </div>
+
+                        <div class="col-1">
+                            <t t-esc="'%.3f' % (h[1]['qty'] or 0.0)"/>
+                        </div>
+
+                        <div class="col-1">
+                            <t t-esc="h[1]['uom']"/>
+                        </div>
+
+                        <div class="col-2 text-end">
+                            <span t-esc="h[1]['amount']"
+                                t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                        </div>
+
+                        <div class="col-2 text-end">
+                            <span t-esc="h[1]['cgst']"
+                                t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                        </div>
+
+                        <div class="col-2 text-end">
+                            <span t-esc="h[1]['sgst']"
+                                t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                        </div>
+
+                        <div class="col-2 text-end">
+                            <span t-esc="(h[1]['cgst'] or 0.0) + (h[1]['sgst'] or 0.0)"
+                                t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                        </div>
+                    </div>
+                </t>
+                <hr/>
+                <div class="row" style="font-weight:bold; padding-top:4px; margin-top:4px; padding-bottom:10px;">
+                    <div class="col-1 ms-2" style="flex:2; text-decoration:underline;">Total</div>
+                    <div class="col-1 ms-2" style="flex:1;"></div>
+                    <div class="col-1 ms-2" style="flex:1;text-decoration:underline;">
+                        <t t-esc="total_qty"/>
+                    </div>
+                    <div class="col-1 ms-2" style="flex:1;"></div>
+                    <div class="col-2 ms-2" style="flex:1;text-decoration:underline;">
+                        <t t-esc="total_amount"/>
+                    </div>
+                    
+                </div>
+            </div>
+            <hr/>         
+            <div style="page-break-inside:avoid;">
+                <t t-set="grand_total_words" t-value="grand_total"/>
+                    <t t-if="grand_total_words">
+                        <div class="ms-2" style="font-weight: bold; width:100%; display:inline-block;">
+                            <span t-esc="'Rupees ' + (o.purchase_id.currency_id if o.purchase_id else o.company_id.currency_id).amount_to_text_indian(grand_total_words) + ' Only'"/>
+                        </div>
+                    </t>
+            </div>
+            
+            <!-- Terms & Signature Block -->
+            <div class="terms-signature" style="width:100%;">
+                <!-- Left Column: Terms / Notes from Sale Order -->
+                <div style="display:inline-block;  vertical-align:top; width:69%; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                    <t t-if="o.sale_id">
+                        <span t-field="o.sale_id.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.sale_id.company_id.terms_type != 'html' else ''}"/>
+                    </t>
+                    <t t-elif="o.purchase_id">
+                        <span t-field="o.purchase_id.notes" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.purchase_id.company_id.terms_type != 'html' else ''}"/>
+                    </t>
+                    <t t-else="">
+                        <span t-field="o.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.company_id.terms_type != 'html' else ''}"/>
+                    </t>
+                    <div class="oe_structure"/>
+                </div>
+                <!-- Right Column: Signature -->
+                <div style="display:inline-block; vertical-align:top; width:30%; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                    <div style="margin-top:10px; text-align:right;">
+                        <strong>For IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                        <strong>Authorised Signatory</strong>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

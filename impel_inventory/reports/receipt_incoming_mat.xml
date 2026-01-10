@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Document Layout template -->
+    <template id="document_layout_inward_receipt" >
+        <t t-call="web.basic_layout">
+            <!-- HEADER -->
+            <div class="o_boxed_header" style="text-align:center; line-height:1.4;border: 1px solid black; box-sizing: border-box; margin: 0; border-bottom:none;"> 
+               <div style="width:100%; overflow:hidden;">
+                    <div class="ms-2" style="float:left; text-align:left; font-weight:bold; color:#000;">
+                        <t t-if="res_company.vat">
+                            GSTIN: <t t-esc="res_company.vat"/>
+                        </t>
+                    </div>
+                    <div style="float:right; text-align:right; font-weight:bold; color:#000;margin-right:10px;">
+                        Original Copy
+                    </div>
+                </div>
+                <strong><p style="text-align: center; font-size:20px; border-bottom:1px solid black; width:25%; margin: 0 auto;">Goods Receipt Note</p></strong>
+                <h2 style="text-align: center; margin: 4px 0;">IMPETUS PROLIFIC PVT LTD</h2>
+                <p style="text-align: center;">
+                    <t t-esc="res_company.street"/><t t-esc="res_company.street2"/><br/>
+                    <t t-esc="res_company.city"/> - <t t-esc="res_company.zip"/><br/>
+                    <t t-if="res_company.partner_id.l10n_in_pan">PAN: <t t-esc="res_company.partner_id.l10n_in_pan"/><br/></t>
+                    <strong><t t-if="res_company.phone">Tel.: <t t-esc="res_company.phone"/></t></strong>
+                </p>
+            </div>
+            <!-- Inner content -->
+            <div>
+                <t t-out="0"/>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer" style="text-align:center; font-size:12px; border-top:1px solid #000; padding-top:5px;">
+                <!-- <p>For <t t-esc="res_company.name"/></p> -->
+            </div>
+
+        </t>
+    </template>
+
+    <!-- Report content section (Inner content) -->
+    <template id="inward_receipt_report_views">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="purchase_order" t-value="o.purchase_id or (o.origin and env['purchase.order'].search([('name', '=', o.origin)], limit=1))"/>
+
+                <t t-call="impel_inventory.document_layout_inward_receipt">
+                <style>
+                    /* Force border to appear on every physical page in PDF */
+                    @page {
+                        margin: 5mm;
+                        /* draw a 1px black border around every page */
+                        border: 1px solid black;
+                    }
+
+                    /* Keep your existing .page styling untouched */
+                    .page {
+                        
+                        box-sizing: border-box;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    /* Ensure header/footer overlap with border */
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                </style>
+
+                    <div class="page" style="border: 1px solid black; box-sizing: border-box; margin: 0;">
+                        
+                        <!-- Information block -->
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px;">
+                                <!-- Left Column Content -->
+                                <span><strong>No.: </strong><t t-esc="o.name"/></span><br/>
+                                <span><strong>Date: </strong><t t-esc="purchase_order.date_order.strftime('%d-%m-%Y') if purchase_order.date_order else ''"/></span><br/>
+                                <span><strong>GR/RR No.:</strong><t t-esc="purchase_order.gr_no or ''"/></span><br/>
+                                <span><strong>Transport: </strong><t t-esc="purchase_order.transport or ''"/></span>
+                                
+                            </div>
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px;">
+                                <!-- Right Column Content -->
+                                <span><strong>Vehicle No.:</strong><t t-esc="purchase_order.vehicle_no or ''"/></span><br/>
+                                <span><strong>Station: </strong><t t-esc="o.partner_id.station"/></span><br/>
+                                <span><strong>E-Way Bill No.: </strong><t t-esc="purchase_order.e_way_bill_no"/></span><br/>
+                            </div>
+                        </div>
+
+                    
+                        <!-- Address block -->
+                        <!-- Quotation To / Billing & Shipping block -->
+                        <div style="width:100%; border-bottom:1px solid black;">
+                            <!-- Left Column -->
+                            <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                                <strong>Billed to:</strong><br/>
+                                <t t-esc="o.partner_id.name"/><br/>
+                                <t t-esc="o.partner_id.street"/><br/>
+                                <t t-esc="o.partner_id.street2"/><br/>
+                                <t t-esc="o.partner_id.city"/><br/>
+                                <t t-esc="o.partner_id.state_id.name"/><br/>
+                                <p><strong>GSTIN / UIN:</strong> <t t-esc="o.partner_id.vat"/></p>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                                <strong>Shipped to:</strong><br/>
+                                <t t-esc="purchase_order.partner_id.name"/><br/>
+                                <t t-esc="purchase_order.partner_id.street"/><br/>
+                                <t t-esc="purchase_order.partner_id.street2"/><br/>
+                                <t t-esc="purchase_order.partner_id.city"/><br/>
+                                <t t-esc="purchase_order.partner_id.state_id.name"/><br/>
+                                <p><strong>GSTIN / UIN:</strong> <t t-esc="purchase_order.partner_id.vat"/></p>
+                            </div>
+                        </div>
+
+                        <!-- Empty Row -->
+                        <!-- <div style="height: 35px; border-bottom:1px solid black;"></div> -->
+                        <div class="row p-2">
+                            <div class="col-12">
+                                <!-- <span style="margin:0;vertical-align:middle;">Service report No. =</span> -->
+                            </div>
+                        </div>
+
+                        <style>
+                            table.only-column-borders {
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+
+                            /* Regular column borders */
+                            table.only-column-borders th,
+                            table.only-column-borders td {
+                                border-right: 1px solid black;
+                            }
+
+                            /* Top border for header row */
+                            table.only-column-borders tr:first-child th {
+                                border-top: 1px solid black;
+                            }
+
+                            /* Bottom border for last row */
+                            table.only-column-borders tr:last-child td {
+                                border-bottom: 1px solid black;
+                            }
+
+                            /* Remove right border from last column (both header body) */
+                            table.only-column-borders th:last-child,
+                            table.only-column-borders td:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Remove any border-right from header row overrides */
+                            table.only-column-borders thead tr th:last-child {
+                                border-right: none !important;
+                            }
+
+                            /* Optional: remove any full-row border applied directly on in header */
+                            table.only-column-borders thead tr {
+                                border-right: none !important;
+                            }
+                        </style>
+
+                        <!-- <t t-set="real_lines" t-value="[line for line in o.order_line if not line.display_type]"/> -->
+                        <!-- <t t-set="last_index" t-value="len(real_lines)"/> -->
+                        <t t-set="counter" t-value="0"/>
+                        <table class="table table-sm o_main_table table-borderless only-column-borders" style="width:100%;">
+                            <thead style="display: table-row-group">
+                                <tr style="text-align: center;border: 1px solid black; border-left:none;">
+                                    <th class="text-start" style="width: 5%;vertical-align:center">S.N.</th>
+                                    <th class="text-start" style="width: 40%;vertical-align:center">Description of Goods</th>
+                                    <th class="text-start" style="width: 12%;vertical-align:center">HSN/SAC Code</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Qty</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Received</th>
+                                    <th class="text-start" style="width: 8%;vertical-align:center">Unit</th>
+                                    <th class="text-start" style="width: 10%;vertical-align:center">Price</th>
+                                    <th class="text-start" style="width: 19%;vertical-align:center">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.move_ids_without_package" t-as="line">
+                                    <!-- Add a Note (spans all 8 columns) to appear as a single row instead of product record -->
+                                    <!-- <t t-if="line.display_type == 'line_note'">
+                                        <tr>
+                                            <td colspan="99" style="border-top: 1px solid black;font-style: italic;text-align: left; background-color: #f8f1f1ff;">
+                                                <span t-field="line.name"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-elif="line.display_type == 'line_section'">
+                                        <tr>
+                                            <td colspan="99" style="border-top: 1px solid black;font-style: italic; text-align: left; background-color: #f7f7f7;">
+                                                <span t-field="line.name"/>
+                                            </td>
+                                        </tr>
+                                    </t> -->
+                                    <!-- Normal Product Line -->
+                                    <t>
+                                        <t t-set="counter" t-value="counter + 1"/>
+                                        <tr>
+                                            <td style="text-align:center;"><t t-esc="counter"/></td>
+                                            <td><t t-esc="line.product_id.display_name or ''"/></td>
+                                            <td><t t-esc="line.product_id.l10n_in_hsn_code or ''"/></td>
+                                            <td style="text-align:center;"><t t-esc="line.product_uom_qty"/></td>
+                                            <td style="text-align:center;"><t t-esc="line.quantity"/></td>
+                                            <td><t t-esc="line.product_uom.name or ''"/></td>
+                                            <td style="text-align:right;"><t t-esc="line.purchase_line_id.price_unit if line.purchase_line_id else ''"/></td>
+                                            <td style="text-align:right;">
+                                                <t t-if="line.purchase_line_id">
+                                                    <t t-set="subtotal"
+                                                    t-value="line.purchase_line_id.price_unit * line.quantity * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                                    <t t-esc="subtotal"/>
+                                                </t>
+                                                <t t-else="">
+                                                    0.00
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </t>
+                                <!-- Totals Section -->
+                                <t t-set="currency" t-value="o.purchase_id.currency_id if o.sale_id else o.company_id.currency_id"/>
+
+                                <t t-set="total_subtotal" t-value="0.0"/>
+                                <t t-set="total_qty" t-value="0.0"/>
+
+                                <t t-foreach="o.move_ids_without_package" t-as="line">
+                                    <t t-if="line.purchase_line_id">
+                                        <t t-set="line_subtotal" t-value="(line.purchase_line_id.price_unit or 0.0) * (line.quantity or 0.0) * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                        <t t-set="total_subtotal" t-value="total_subtotal + line_subtotal"/>
+                                    </t>
+                                    <t t-set="total_qty" t-value="total_qty + (line.quantity or 0.0)"/>
+                                </t>
+
+                                <!-- Subtotal Row -->
+                                <!-- <tr>
+                                    <td colspan="7" style="text-align: right; padding:4px; border-top: 1px solid black;">
+                                       
+                                    </td>
+                                    <td style="text-align: right; padding:4px; border-top: 1px solid black;">
+                                        <strong>
+                                            <span t-esc="total_subtotal" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                        </strong>
+                                    </td>
+                                </tr> -->
+
+                                <!-- GST Row -->
+                                <!-- <t t-set="tax_amount" t-value="0.0"/>
+                                <t t-set="tax_label" t-value="'GST'"/>
+                                <t t-if="o.purchase_id">
+                                    <t t-foreach="o.purchase_id.order_line" t-as="pline">
+                                        <t t-foreach="pline.taxes_id" t-as="tax">
+                                            <t t-set="tax_label" t-value="tax.name.split(' ')[0]"/>
+                                            <t t-set="tax_amount" t-value="tax_amount + (line_subtotal * (tax.amount or 0.0)/100.0)"/>
+                                        </t>
+                                    </t>
+                                </t> -->
+
+                                <!-- <tr>
+                                    <td colspan="4" style="text-align:right;padding:4px; border-right:none;">
+                                        <span>Add : GST</span> 
+                                    </td>
+                                    <td colspan="2" style="text-align:right;padding:4px; border-right:none;">
+                                        <span>@</span>
+                                    </td>
+                                    <td colspan="1" style="text-align:left;padding:4px;">
+                                        <span t-esc="tax_label"/>
+                                    </td>
+                                    <td colspan="1" style="text-align: right;padding:4px;">
+                                        <span t-esc="tax_amount" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                    </td>
+                                </tr> -->
+
+                                <!-- Grand Total Row -->
+                                <tr>
+                                    <td colspan="4" style="text-align:center;padding:4px; border-right:none; border-top:1px solid black;">
+                                        <strong>Grand Total</strong>
+                                    </td>
+                                    <td colspan="3" style="text-align:left; padding: 4px; border-top:1px solid black;">
+                                        <t t-set="uom_name" t-value="o.move_ids_without_package and o.move_ids_without_package[0].product_uom.name or ''"/>
+                                        <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
+                                    </td>
+                                    <td colspan="1" style="text-align: right;padding:4px; border-top:1px solid black;">
+                                        <t t-set="grand_total" t-value="total_subtotal"/>
+                                        <span t-esc="grand_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="page-break-inside:avoid;">
+                            <div class="row" style=" display:flex; font-weight: bold; padding-bottom: 4px;">
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline;">HSN/SAC</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline;">Tax Rate</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline;">Main Qty</div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration: underline;">UOM</div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration: underline;">Taxable Amt</div>
+                            </div>
+
+                            <t t-set="hsn_summary" t-value="get_hsn_summary(o)"/>
+                            <t t-set="total_qty" t-value="0"/>
+                            <t t-set="total_amount" t-value="0"/>
+                            <t t-foreach="hsn_summary.items()" t-as="h">
+                                <t t-set="total_qty" t-value="total_qty + h[1]['qty']"/>
+                                <t t-set="total_amount" t-value="total_amount + h[1]['amount']"/>
+                                <div class="row" style="padding: 2px 0;">
+                                    <!-- HSN/SAC -->
+                                    <div class="col-1 ms-2" style="flex:1;">
+                                       <t t-esc="h[0]"/>
+                                    </div>
+                                    <!-- Tax Rate -->
+                                    <div class="col-1 ms-2" style="flex:1;">
+                                        <t t-esc="h[1]['tax_rate']"/>
+                                    </div>
+                                    <!-- Main Quantity -->
+                                    <div class="col-1 ms-2" style="flex:1;">
+                                        <t t-esc="h[1]['qty']"/>
+                                    </div>
+                                    <!-- UOM -->
+                                    <div class="col-1 ms-2" style="flex:1;">
+                                        <t t-esc="h[1]['uom']"/>
+                                    </div>
+                                    <div class="col-2 ms-2" style="flex:1;">
+                                        <t t-esc="h[1]['amount']"/>
+                                    </div>
+                                    
+                                </div>
+                            </t>
+
+                            <div class="row" style="font-weight:bold; padding-top:4px; margin-top:4px; padding-bottom:10px;">
+                                <div class="col-1 ms-2" style="flex:2; text-decoration:underline;">Total</div>
+                                <div class="col-1 ms-2" style="flex:1;"></div>
+                                <div class="col-1 ms-2" style="flex:1;text-decoration:underline;">
+                                    <t t-esc="total_qty"/>
+                                </div>
+                                <div class="col-1 ms-2" style="flex:1;"></div>
+                                <div class="col-2 ms-2" style="flex:1;text-decoration:underline;">
+                                    <t t-esc="total_amount"/>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                        <div style="page-break-inside:avoid;">
+                            <t t-set="grand_total_words" t-value="grand_total"/>
+                                <t t-if="grand_total_words">
+                                    <div class="ms-2" style="font-weight: bold; width:100%; display:inline-block;">
+                                        <span t-esc="'Rupees ' + (o.purchase_id.currency_id if o.purchase_id else o.company_id.currency_id).amount_to_text_indian(grand_total_words) + ' Only'"/>
+                                    </div>
+                                </t>
+                        </div>
+                    </div>
+                      
+                    <!-- Terms & Signature Block -->
+                    <div class="terms-signature" style="width:100%; border:1px solid black; box-sizing:border-box;">
+                        <!-- Left Column: Terms / Notes from Sale Order -->
+                        <div style="display:inline-block;  vertical-align:top; width:69%; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                            <t t-if="o.sale_id">
+                                <span t-field="o.sale_id.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.sale_id.company_id.terms_type != 'html' else ''}"/>
+                            </t>
+                            <t t-else="">
+                                <span t-field="o.note" t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.company_id.terms_type != 'html' else ''}"/>
+                            </t>
+                            <div class="oe_structure"/>
+                        </div>
+
+                        <!-- Right Column: Signature -->
+                        <div style="display:inline-block; vertical-align:top; width:30%; box-sizing:border-box; padding-left:6px; padding-top:4px; padding-bottom:4px;">
+                            <div style="margin-top:10px; text-align:right;">
+                                <strong>For IMPETUS PROLIFIC PVT LTD</strong><br/><br/><br/>
+                                <strong>Authorised Signatory</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </t>
+            </t>
+        </t> 
+    </template>
+
+    <!-- Code to set desried paper format for Sale order -->
+    <record id="paperformat_inward_receipt" model="report.paperformat">
+        <field name="name">Inward Receipt</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">15</field>
+        <field name="margin_bottom">20</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Report Action -->
+    <record id="inward_receipt_report_action" model="ir.actions.report">
+        <field name="name">Impel Goods Receipt Note</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">impel_inventory.inward_receipt_report_views</field>
+        <field name="report_file">impel_inventory.inward_receipt_report_views</field>
+        <field name="attachment" eval="False"/> 
+        <field name="paperformat_id" ref="impel_inventory.paperformat_inward_receipt"/>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field> <!-- Shows under the "Print" button -->
+    </record>
+    
+</odoo>

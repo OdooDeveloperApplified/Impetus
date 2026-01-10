@@ -1,0 +1,40 @@
+<odoo>
+    <record id="view_purchase_order_form_inherit_custom" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.custom.fields</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Insert after partner_id (Vendor) -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="indent_no"/>
+                    <field name="executive"/>
+                    <field name="mc_details"/>
+                    <field name="service_report_no"/>
+                    <field name="gr_no"/>
+                    <field name="transport"/>
+                    <field name="vehicle_no"/>
+                    <field name="e_way_bill_no"/>
+            </xpath>
+
+            <!-- Add Roundoff checkbox near totals -->
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <field name="is_enabled_roundoff"/>
+                <field name="amount_roundoff"/>
+                <field name="amount_total_rounded"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_purchase_order_tree_inherit_custom" model="ir.ui.view">
+        <field name="name">purchase.order.tree.inherit.custom.fields</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <!-- Insert total rounded after amount total -->
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="amount_total_rounded" sum="Total"/> 
+            </xpath>
+        </field>
+    </record>
+</odoo>
+ 

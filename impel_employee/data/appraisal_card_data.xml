@@ -1,0 +1,26 @@
+<odoo>
+    <record id="card_well_done" model="employee.appraisal.card">
+        <field name="name">Well Done</field>
+        <field name="amount">100</field>
+    </record>
+
+    <record id="card_problem_solver" model="employee.appraisal.card">
+        <field name="name">Problem Solver</field>
+        <field name="amount">250</field>
+    </record>
+
+    <record id="card_excellent" model="employee.appraisal.card">
+        <field name="name">Excellent</field>
+        <field name="amount">500</field>
+    </record>
+
+    <record id="card_brilliant" model="employee.appraisal.card">
+        <field name="name">Brilliant</field>
+        <field name="amount">1000</field>
+    </record>
+
+    <record id="card_penalty" model="employee.appraisal.card">
+        <field name="name">Penalty</field>
+        <field name="is_penalty">True</field>
+    </record>
+</odoo>

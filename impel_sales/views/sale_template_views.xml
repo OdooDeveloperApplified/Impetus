@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Record to add custom fields in Quotation form view -->
+    <record id="view_quotation_template_form_inherit" model="ir.ui.view">
+        <field name="name">quotation.template.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_open_discount_wizard']" position="after">
+                <button name="action_open_pf_charges_wizard"
+                        string="Add P&#38;F Charges"
+                        type="object"
+                        class="btn-secondary"
+                        icon="fa-plus"/>
+            </xpath>
+
+            <xpath expr="//field[@name='tax_totals']" position="before">
+                <field name="amount_pf" readonly="1" widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                    string="PF Charges"/>
+                <!-- <field name="amount_untaxed"/> -->
+            </xpath>
+
+            <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="after">
+                <field name="is_enabled_roundoff"/>
+                <field name="amount_total_with_pf" readonly="1"/>
+                <field name="amount_total_rounded" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                
+            </xpath>
+
+            <xpath expr="//field[@name='partner_shipping_id']" position="after">
+                <field name="gr_no"/>
+                <field name="transport"/>
+                <field name="vehicle_no"/>
+                <field name="transport_type"/>
+                <field name="way_bill_no"/>
+            </xpath>
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="po_number"/>
+                <field name="po_date"/>
+            </xpath>
+
+        </field>
+    </record>  
+</odoo>
