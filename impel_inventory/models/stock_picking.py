@@ -33,44 +33,52 @@ class StockPicking(models.Model):
         summary = {}
 
         for move in self.move_ids_without_package:
-
             purchase_line = move.purchase_line_id
             sale_line = move.sale_line_id
-
-            # Decide line source
             line = purchase_line or sale_line
             if not line:
                 continue
 
-            # Product / UOM
-            hsn = line.product_id.l10n_in_hsn_code or 'N/A'
-            uom = line.product_uom.name or ''
+            product = move.product_id
+            hsn = product.l10n_in_hsn_code or 'N/A'
+            uom = move.product_uom.name or ''
 
-            # Quantity: delivery-safe
-            qty = move.quantity or move.product_uom_qty or 0.0
+            qty = move.quantity or 0.0
+            price_unit = line.price_unit or 0.0
+            discount = line.discount or 0.0
+            price_after_discount = price_unit * (1 - discount / 100.0)
 
-            # Amount: order-line based
-            amount = line.price_subtotal or 0.0
-
-            # Taxes
-            cgst = sgst = 0.0
-            tax_rate = 0.0
-
-            # FIX: correct tax field per line type
-            taxes = (
-                purchase_line.taxes_id
-                if purchase_line
-                else sale_line.tax_id
+            taxes = purchase_line.taxes_id if purchase_line else sale_line.tax_id
+            currency = (
+                self.purchase_id.currency_id
+                if self.purchase_id
+                else self.company_id.currency_id
             )
 
-            for tax in taxes:
-                tax_rate += tax.amount
-                if tax.tax_group_id.name == 'CGST':
-                    cgst += amount * tax.amount / 100
-                elif tax.tax_group_id.name == 'SGST':
-                    sgst += amount * tax.amount / 100
+            tax_data = taxes.compute_all(
+                price_after_discount,
+                currency=currency,
+                quantity=qty,
+                product=product,
+                partner=self.partner_id,
+            )
 
-            # Init summary
+            taxable_amount = tax_data['total_excluded']
+            cgst = sgst = igst = 0.0
+            tax_rate = 0.0
+
+            for t in tax_data['taxes']:
+                tax = self.env['account.tax'].browse(t['id'])
+                tax_rate += tax.amount
+
+                name = (t.get('name') or '').upper()
+                if 'CGST' in name:
+                    cgst += t['amount']
+                elif 'SGST' in name:
+                    sgst += t['amount']
+                elif 'IGST' in name:
+                    igst += t['amount']
+
             if hsn not in summary:
                 summary[hsn] = {
                     'qty': 0.0,
@@ -79,15 +87,17 @@ class StockPicking(models.Model):
                     'tax_rate': tax_rate,
                     'cgst': 0.0,
                     'sgst': 0.0,
+                    'igst': 0.0,
                 }
 
-            # Accumulate
             summary[hsn]['qty'] += qty
-            summary[hsn]['amount'] += amount
+            summary[hsn]['amount'] += taxable_amount
             summary[hsn]['cgst'] += cgst
             summary[hsn]['sgst'] += sgst
+            summary[hsn]['igst'] += igst
 
         return summary
+
 
 
 

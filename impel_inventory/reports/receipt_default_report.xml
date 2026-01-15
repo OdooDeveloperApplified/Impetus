@@ -58,9 +58,10 @@
                                 <td><t t-esc="line.product_uom.name or ''"/></td>
                                 <td style="text-align:right;"><t t-esc="line.purchase_line_id.price_unit if line.purchase_line_id else ''"/></td>
                                 <td style="text-align:right;">
-                                    <t t-if="line.purchase_line_id">
+                                    <t t-if="line.purchase_line_id or line.sale_line_id">
+                                        <t t-set="order_line" t-value="line.purchase_line_id or line.sale_line_id"/>
                                         <t t-set="subtotal"
-                                        t-value="line.purchase_line_id.price_unit * line.quantity * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                        t-value="order_line.price_unit * line.quantity * (1 - (order_line.discount or 0.0)/100.0)"/>
                                         <t t-esc="subtotal"/>
                                     </t>
                                     <t t-else="">
@@ -70,16 +71,39 @@
                             </tr>
                         </t>
                     </t>
+                    <!-- P & F charges section -->
+                    <t t-if="o.sale_id and o.sale_id.pf_percentage &gt; 0">
+                        <tr>
+                            <td colspan="4"></td>
+                            <td colspan="3" style="text-align:left;">
+                                <strong>
+                                    P &amp; F Charges @
+                                    <t t-set="pf" t-value="o.sale_id.pf_percentage"/>
+                                    <t t-esc="pf &gt;= 1 and pf or pf * 100"/>%
+                                </strong>
+                            </td>
+                            <td style="text-align:right;">
+                                <span t-esc="o.sale_id.amount_pf"
+                                    t-options="{'widget':'monetary','display_currency': o.sale_id.currency_id}"/>
+                            </td>
+                        </tr>
+                    </t>
 
+                   
                     <!-- Totals Section -->
                     <t t-set="currency" t-value="(o.purchase_id.currency_id or o.company_id.currency_id)[:1]"/>
                     <t t-set="total_subtotal" t-value="0.0"/>
                     <t t-set="total_qty" t-value="0.0"/>
                     <t t-foreach="o.move_ids_without_package" t-as="line">
-                        <t t-if="line.purchase_line_id">
-                            <t t-set="line_subtotal" t-value="(line.purchase_line_id.price_unit or 0.0) * (line.quantity or 0.0) * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                        <t t-set="order_line" t-value="line.purchase_line_id or line.sale_line_id"/>
+                        <t t-if="order_line">
+                            <t t-set="line_subtotal"
+                            t-value="(order_line.price_unit or 0.0)
+                                        * (line.quantity or 0.0)
+                                        * (1 - (order_line.discount or 0.0) / 100.0)"/>
                             <t t-set="total_subtotal" t-value="total_subtotal + line_subtotal"/>
                         </t>
+
                         <t t-set="total_qty" t-value="total_qty + (line.quantity or 0.0)"/>
                     </t>
 
@@ -93,7 +117,7 @@
                             <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
                         </td>
                         <td colspan="1" style="text-align: right;padding:4px; border-top:1px solid black;">
-                            <t t-set="grand_total" t-value="total_subtotal"/>
+                            <t t-set="grand_total" t-value="total_subtotal + (o.sale_id.amount_pf if o.sale_id else 0.0)"/>
                             <span t-esc="grand_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                         </td>
                     </tr>
@@ -128,9 +152,10 @@
                                 <td><t t-esc="line.product_uom.name or ''"/></td>
                                 <td style="text-align:right;"><t t-esc="line.purchase_line_id.price_unit if line.purchase_line_id else ''"/></td>
                                 <td style="text-align:right;">
-                                    <t t-if="line.purchase_line_id">
+                                    <t t-if="line.purchase_line_id or line.sale_line_id">
+                                        <t t-set="order_line" t-value="line.purchase_line_id or line.sale_line_id"/>
                                         <t t-set="subtotal"
-                                        t-value="line.purchase_line_id.price_unit * line.quantity * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                                        t-value="order_line.price_unit * line.quantity * (1 - (order_line.discount or 0.0)/100.0)"/>
                                         <t t-esc="subtotal"/>
                                     </t>
                                     <t t-else="">
@@ -140,15 +165,39 @@
                             </tr>
                         </t>
                     </t>
+
+                    <!-- P & F charges for Sale order -->
+                    <t t-if="o.sale_id and o.sale_id.pf_percentage &gt; 0">
+                        <tr>
+                            <td colspan="4"></td>
+                            <td colspan="3" style="text-align:left;">
+                                <strong>
+                                    P &amp; F Charges @
+                                    <t t-set="pf" t-value="o.sale_id.pf_percentage"/>
+                                    <t t-esc="pf &gt;= 1 and pf or pf * 100"/>%
+                                </strong>
+                            </td>
+                            <td style="text-align:right;">
+                                <span t-esc="o.sale_id.amount_pf"
+                                    t-options="{'widget':'monetary','display_currency': o.sale_id.currency_id}"/>
+                            </td>
+                        </tr>
+                    </t>
+
                     <!-- Totals Section -->
                     <t t-set="currency" t-value="(o.purchase_id.currency_id or o.company_id.currency_id)[:1]"/>
                     <t t-set="total_subtotal" t-value="0.0"/>
                     <t t-set="total_qty" t-value="0.0"/>
                     <t t-foreach="o.move_ids_without_package" t-as="line">
-                        <t t-if="line.purchase_line_id">
-                            <t t-set="line_subtotal" t-value="(line.purchase_line_id.price_unit or 0.0) * (line.quantity or 0.0) * (1 - (line.purchase_line_id.discount or 0.0)/100.0)"/>
+                        <t t-set="order_line" t-value="line.purchase_line_id or line.sale_line_id"/>
+                        <t t-if="order_line">
+                            <t t-set="line_subtotal"
+                            t-value="(order_line.price_unit or 0.0)
+                                        * (line.quantity or 0.0)
+                                        * (1 - (order_line.discount or 0.0) / 100.0)"/>
                             <t t-set="total_subtotal" t-value="total_subtotal + line_subtotal"/>
                         </t>
+
                         <t t-set="total_qty" t-value="total_qty + (line.quantity or 0.0)"/>
                     </t>
                     <!-- Grand Total Row -->
@@ -161,7 +210,7 @@
                             <strong><span t-esc="total_qty"/> <span t-esc="uom_name"/></strong>
                         </td>
                         <td colspan="1" style="text-align: right;padding:4px; border-top:1px solid black;">
-                            <t t-set="grand_total" t-value="total_subtotal"/>
+                            <t t-set="grand_total" t-value="total_subtotal + (o.sale_id.amount_pf if o.sale_id else 0.0)"/>
                             <span t-esc="grand_total" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                         </td>
                     </tr>
@@ -176,6 +225,7 @@
                 <t t-set="total_amount" t-value="0.0"/>
                 <t t-set="total_cgst" t-value="0.0"/>
                 <t t-set="total_sgst" t-value="0.0"/>
+                <t t-set="total_tax" t-value="0.0"/>
 
                 <!-- HEADER -->
                 <div class="row fw-bold border-bottom pb-1">
@@ -195,6 +245,8 @@
                     <t t-set="total_amount" t-value="total_amount + (h[1]['amount'] or 0.0)"/>
                     <t t-set="total_cgst" t-value="total_cgst + (h[1]['cgst'] or 0.0)"/>
                     <t t-set="total_sgst" t-value="total_sgst + (h[1]['sgst'] or 0.0)"/>
+                    <t t-set="total_tax" t-value="total_tax + (h[1]['cgst'] or 0.0) + (h[1]['sgst'] or 0.0) + (h[1]['igst'] or 0.0)"/>
+
 
                     <div class="row py-1 border-bottom">
                         <div class="col-1">
@@ -229,9 +281,11 @@
                         </div>
 
                         <div class="col-2 text-end">
-                            <span t-esc="(h[1]['cgst'] or 0.0) + (h[1]['sgst'] or 0.0)"
+                            <span t-esc="(h[1]['cgst'] or 0.0) + (h[1]['sgst'] or 0.0) + (h[1]['igst'] or 0.0)"
+
                                 t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                         </div>
+
                     </div>
                 </t>
                 <hr/>
@@ -243,14 +297,13 @@
                     </div>
                     <div class="col-1 ms-2" style="flex:1;"></div>
                     <div class="col-2 ms-2" style="flex:1;text-decoration:underline;">
-                        <t t-esc="total_amount"/>
+                        <t t-esc="total_amount + total_tax  + (o.sale_id.amount_pf if o.sale_id else 0.0)"/>
                     </div>
-                    
                 </div>
             </div>
             <hr/>         
             <div style="page-break-inside:avoid;">
-                <t t-set="grand_total_words" t-value="grand_total"/>
+                <t t-set="grand_total_words" t-value="grand_total + total_tax"/>
                     <t t-if="grand_total_words">
                         <div class="ms-2" style="font-weight: bold; width:100%; display:inline-block;">
                             <span t-esc="'Rupees ' + (o.purchase_id.currency_id if o.purchase_id else o.company_id.currency_id).amount_to_text_indian(grand_total_words) + ' Only'"/>
