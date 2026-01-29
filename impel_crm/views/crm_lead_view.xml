@@ -1,0 +1,26 @@
+<odoo>
+    <!-- Record to add custom fields in leads tree view of crm module -->
+    <record id="view_crm_lead_tree_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.tree.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="mobile"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Record to add custom fields in leads pipeline tree view of crm module -->
+    <record id="view_crm_pipeline_tree_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.tree.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='email_from']" position="after">
+                <field name="mobile"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+ 

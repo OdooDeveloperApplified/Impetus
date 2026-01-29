@@ -38,11 +38,11 @@ class EmployeeTemplate(models.Model):
     ehram_number = fields.Char(string="E-shram Card Number")
     company_assets = fields.Text(string="Comapny Assets Details")
 
-    @api.constrains('number_of_children', 'emp_child_ids')
-    def _check_children_count(self):
-        for rec in self:
-            if rec.number_of_children != len(rec.emp_child_ids):
-                raise ValidationError("Number of children must match the children records added.")
+    # @api.onchange('number_of_children', 'emp_child_ids')
+    # def _check_children_count(self):
+    #     for rec in self:
+    #         if rec.number_of_children != len(rec.emp_child_ids):
+    #             raise ValidationError("Number of children must match the children records added.")
             
     ############ Code for Employee Appraisal Card workflow: starts ############
     appraisal_line_ids = fields.One2many("employee.appraisal.line", "employee_id", string="Appraisals")
