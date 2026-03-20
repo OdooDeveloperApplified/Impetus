@@ -4,7 +4,7 @@
     'category': 'HR',
     'author': 'Applified Inventory',
     'website': 'https://www.impel.com',
-    'depends': ['base', 'mail','sale','web','stock'],
+    'depends': ['base', 'mail','sale','web','stock','purchase'],
     'data': [
         # 'security/ir.model.access.csv',
         'reports/delivery_challan_report.xml',
@@ -14,4 +14,5 @@
     'assets': {},
     'installable': True,
     'auto_install': False,
+    'license':'LGPL-3',
 }

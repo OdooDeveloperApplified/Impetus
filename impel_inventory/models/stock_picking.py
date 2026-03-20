@@ -98,9 +98,6 @@ class StockPicking(models.Model):
 
         return summary
 
-
-
-
 class InwardReceiptReport(models.AbstractModel):
     _name = 'report.impel_inventory.inward_receipt_report_views'
     _description = 'Inward Receipt Report'

@@ -4,7 +4,7 @@
     'category': 'HR',
     'author': 'Applified Sales',
     'website': 'https://www.impel.com',
-    'depends': ['base', 'mail','sale','web'],
+    'depends': ['base', 'mail','sale','web','sale_stock','stock','account','account_accountant'],
     'data': [
         'security/ir.model.access.csv',
         
@@ -17,4 +17,5 @@
     'assets': {},
     'installable': True,
     'auto_install': False,
+    'license':'LGPL-3',
 }

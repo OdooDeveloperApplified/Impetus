@@ -108,7 +108,7 @@
                 </thead>
                 <tbody>
                 <t t-set="counter" t-value="1"/>
-                    <t t-foreach="doc.order_line" t-as="line">
+                     <t t-foreach="doc.order_line.filtered(lambda l: not l.is_lot_split_line)" t-as="line">
                         <tr style="background-color: white; color:black;">
                             <td class="text-center">
                                 <span t-esc="counter"/>
