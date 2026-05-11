@@ -15,6 +15,12 @@ class SaleOrder(models.Model):
         'stock.warehouse', string='Warehouse', required=True,
         compute='_compute_warehouse_id', store=True, readonly=False, precompute=True,
         check_company=True)
+    custom_salesperson = fields.Many2one('hr.employee', string='Salesperson (Employee)', required=True, tracking=True)
+
+    def _prepare_invoice(self):
+        vals = super()._prepare_invoice()
+        vals['custom_salesperson'] = self.custom_salesperson.id
+        return vals
 
     # -------------------------------
     # MAIN COMPUTATION

@@ -4,10 +4,11 @@
     'category': 'HR',
     'author': 'Applified Manufacturing',
     'website': 'https://www.impel.com',
-    'depends': ['base', 'mail','sale','web','stock'],
+    'depends': ['base', 'mail','sale','web','stock','mrp'],
     'data': [
         
         'reports/production_voucher.xml',
+        'views/mrp_template_views.xml',
         
     ],
     'assets': {},

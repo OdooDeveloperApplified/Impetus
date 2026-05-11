@@ -57,6 +57,9 @@
                 </div>
             </xpath>
             <!-- (NEW) Code to add Split Lot-Wise button ends -->
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="custom_salesperson"/>
+            </xpath>
         </field>
     </record>  
 

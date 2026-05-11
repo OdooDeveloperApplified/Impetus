@@ -4,7 +4,7 @@
     'category': 'HR',
     'author': 'Applified Sales',
     'website': 'https://www.impel.com',
-    'depends': ['base', 'mail','sale','web','sale_stock','stock','account','account_accountant'],
+    'depends': ['base', 'mail','sale','web','sale_stock','stock','account','account_accountant','hr'],
     'data': [
         'security/ir.model.access.csv',
         

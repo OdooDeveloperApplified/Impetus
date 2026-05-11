@@ -13,6 +13,7 @@
                     <field name="service_report_no"/>
                     <field name="gr_no"/>
                     <field name="transport"/>
+                    <field name="po_delivery_time"/>
                     <field name="vehicle_no"/>
                     <field name="e_way_bill_no"/>
             </xpath>

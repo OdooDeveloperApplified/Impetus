@@ -6,6 +6,7 @@
     'website': 'https://www.impel.com',
     'depends': ['base', 'mail','sale','web','purchase', 'account','sale_management','impel_sales'],
     'data': [
+        "views/res_company_views.xml",
         "reports/tax_invoice_report.xml",
         "reports/credit_note_report.xml",
         "reports/receipt.xml",

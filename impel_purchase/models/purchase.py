@@ -15,6 +15,7 @@ class PurchaseOrder(models.Model):
     transport = fields.Char(string="Transport")
     vehicle_no = fields.Char(string="Vehicle No.")
     e_way_bill_no = fields.Char(string="E-Way Bill No.")
+    po_delivery_time = fields.Datetime(string="Delivery Time")
 
     is_enabled_roundoff = fields.Boolean(string="Apply Roundoff", default=True)
     amount_roundoff = fields.Monetary(string='Amount (Rounded)', compute='_compute_amount_roundoff', store=True)

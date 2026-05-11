@@ -87,7 +87,7 @@
                                     <span>Vehicle No.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.vehicle_no"/></span><br/>
                                     <span>Station&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.partner_id.station"/></span><br/>
                                 <span>E-Way Bill No.&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="o.e_way_bill_no"/></span><br/>
-                                <span>Delivery Time&#160;&#160;&#160;&#160;&#160;&#160; : <t t-esc="o.effective_date.strftime('%d-%m-%Y') if o.effective_date else ''"/></span>                                
+                                <span>Delivery Time&#160;&#160;&#160;&#160;&#160;&#160; : <t t-esc="o.po_delivery_time.strftime('%d-%m-%Y') if o.po_delivery_time else ''"/></span>                                
                             </div>
                         </div>
 
@@ -176,6 +176,7 @@
                                                 <t t-esc="counter"/>
                                             </td>
                                             <td>
+                                                <span t-if="line.product_id.name" t-field="line.product_id.name"/>
                                                 <span t-if="line.name" t-field="line.name"/>
                                             </td>
                                             <td>                                            

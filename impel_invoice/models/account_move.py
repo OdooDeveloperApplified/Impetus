@@ -11,6 +11,19 @@ class AccountMove(models.Model):
     po_number = fields.Char(string="PO Number", compute="_compute_transport", store=True)
     po_date = fields.Date(string="PO Date", compute="_compute_transport", store=True)
     discount_percentage = fields.Float(string="Discount Percentage")
+    custom_salesperson = fields.Many2one('hr.employee', string='Salesperson (Employee)', required=True, tracking=True)
+    is_from_sale_order = fields.Boolean(
+        string="From Sale Order",
+        compute="_compute_is_from_sale_order",
+        store=True
+    )
+
+    @api.depends('invoice_line_ids.sale_line_ids')
+    def _compute_is_from_sale_order(self):
+        for move in self:
+            move.is_from_sale_order = any(
+                line.sale_line_ids for line in move.invoice_line_ids
+            )
 
     @api.depends('invoice_origin')
     def _compute_transport(self):
@@ -21,6 +34,83 @@ class AccountMove(models.Model):
             move.po_number = getattr(sale, 'po_number', False)
             move.po_date = getattr(sale, 'po_date', False)
             move.discount_percentage = sale.discount_percentage or 0.0
+    
+    def _get_financial_year(self, date):
+        """
+        Returns financial year like 26-27
+        FY in India: April → March
+        """
+        if not date:
+            date = fields.Date.today()
+
+        year = date.year
+
+        if date.month >= 4:
+            start_year = year
+            end_year = year + 1
+        else:
+            start_year = year - 1
+            end_year = year
+
+        return f"{str(start_year)[-2:]}-{str(end_year)[-2:]}"
+    
+    def _get_branch_sequence(self):
+        self.ensure_one()
+
+        if not self.company_id:
+            return False
+
+        code_map = {
+            'out_invoice': ('company.invoice', 'INV'),
+            'in_invoice': ('company.bill', 'BILL'),
+            'out_refund': ('company.customer.refund', 'CRN'),
+            'in_refund': ('company.vendor.refund', 'VRN'),
+        }
+
+        seq_data = code_map.get(self.move_type)
+        if not seq_data:
+            return False
+
+        seq_code = seq_data
+
+        # financial year
+        fy = self._get_financial_year(self.invoice_date or fields.Date.today())
+
+        # VERY IMPORTANT → include FY in sequence_code
+        sequence_code = f"{seq_code}.{self.company_id.id}.{fy}"
+
+        sequence = self.env['ir.sequence'].search([
+            ('code', '=', sequence_code),
+            ('company_id', '=', self.company_id.id)
+        ], limit=1)
+
+        if not sequence:
+            branch = self.company_id.branch_code or self.company_id.name or 'COMP'
+
+            sequence = self.env['ir.sequence'].create({
+                'name': f"{branch} {fy}",
+                'code': sequence_code,
+                'prefix': f"{branch}-{fy}-",
+                'padding': 5,
+                'implementation': 'no_gap',
+                'company_id': self.company_id.id,
+            })
+
+        return sequence
+    
+    def action_post(self):
+        for move in self:
+            if move.name == '/' and move.company_id:
+                sequence = move._get_branch_sequence()
+                if sequence:
+                    move.name = sequence.next_by_id()
+
+        return super(AccountMove, self).action_post()
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    branch_code = fields.Char(string="Branch Code")
 
 class ResCurrency(models.Model):
     _inherit = 'res.currency'
