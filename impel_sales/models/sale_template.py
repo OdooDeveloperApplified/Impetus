@@ -63,7 +63,7 @@ class SaleOrder(models.Model):
             # Assign computed values
             order.amount_pf = amount_pf
             order.amount_untaxed_with_pf = amount_untaxed_with_pf
-            order.amount_untaxed = amount_untaxed_with_pf   # override displayed Untaxed
+            order.amount_untaxed = amount_untaxed_with_pf
             order.amount_tax = amount_tax_with_pf
             order.amount_total = amount_total
             order.amount_total_with_pf = amount_total
@@ -145,7 +145,6 @@ class SaleOrder(models.Model):
             order.tax_totals = tax_totals
 
         return res
-
 
     def action_open_pf_charges_wizard(self):
         self.ensure_one()
@@ -293,6 +292,60 @@ class SaleOrder(models.Model):
                     qty_to_assign -= consume_qty
 
         return invoices
+    
+    # Code to log changes when a sale order is updated
+    def write(self, vals):
+        IGNORE_FIELDS = {
+            'amount_total', 'amount_tax', 'amount_untaxed',
+            'amount_total_with_pf', 'amount_untaxed_with_pf',
+            'amount_pf', 'amount_roundoff', 'amount_total_rounded',
+            'tax_totals', 'partner_invoice_id', 'partner_shipping_id'
+        }
+
+        for order in self:
+            changes = []
+
+            for field, new_value in vals.items():
+                # Skip unwanted fields
+                if field in IGNORE_FIELDS or field == 'order_line':
+                    continue
+
+                if field not in order._fields:
+                    continue
+
+                field_obj = order._fields[field]
+                field_label = field_obj.string or field
+
+                old_value = order[field]
+
+                # Many2one
+                if field_obj.type == 'many2one':
+                    old_value = old_value.display_name if old_value else "None"
+                    new_value_display = self.env[field_obj.comodel_name].browse(new_value).display_name if new_value else "None"
+
+                # Selection
+                elif field_obj.type == 'selection':
+                    selection_dict = dict(field_obj.selection)
+                    old_value = selection_dict.get(old_value, old_value)
+                    new_value_display = selection_dict.get(new_value, new_value)
+
+                else:
+                    old_value = old_value or "None"
+                    new_value_display = new_value or "None"
+
+                if str(old_value) != str(new_value_display):
+                    changes.append(f"{field_label} : {old_value} → {new_value_display}")
+
+            res = super(SaleOrder, order).write(vals)
+
+            if changes:
+                order.message_post(
+                    body="\n".join(changes),  
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_note",
+                )
+
+        return True
 
 ##################### New code to show lot/serial wise data on sales order:Ends ##################################
 
@@ -319,6 +372,82 @@ class SaleOrderLine(models.Model):
     
     # (NEW) Field to mark lot split lines to show under purchase order lines
     is_lot_split_line = fields.Boolean(string="Lot Split Line", default=False, copy=False, index=True)
+
+    # Code to log changes when a sale order line is updated
+    def write(self, vals):
+        IGNORE_FIELDS = {
+            'price_subtotal', 'price_total', 'price_tax'
+        }
+
+        for line in self:
+            changes = []
+            order = line.order_id
+
+            for field, new_value in vals.items():
+                if field in IGNORE_FIELDS:
+                    continue
+
+                if field not in line._fields:
+                    continue
+
+                field_obj = line._fields[field]
+                field_label = field_obj.string or field
+
+                old_value = line[field]
+
+                # Many2one
+                if field_obj.type == 'many2one':
+                    old_value = old_value.display_name if old_value else "None"
+                    new_value_display = self.env[field_obj.comodel_name].browse(new_value).display_name if new_value else "None"
+
+                # Selection
+                elif field_obj.type == 'selection':
+                    selection_dict = dict(field_obj.selection)
+                    old_value = selection_dict.get(old_value, old_value)
+                    new_value_display = selection_dict.get(new_value, new_value)
+
+                else:
+                    old_value = old_value or "None"
+                    new_value_display = new_value or "None"
+
+                if str(old_value) != str(new_value_display):
+                    changes.append(f"{field_label}: {old_value} → {new_value_display}")
+
+            res = super(SaleOrderLine, line).write(vals)
+
+            if changes:
+                order.message_post(
+                    body=f"Line: {line.product_id.display_name}\n" + "\n".join(changes),
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_note",
+                )
+
+        return True
+    
+    # Code to log changes when a sale order line is created
+    def create(self, vals):
+        record = super().create(vals)
+
+        if record.order_id:
+            record.order_id.message_post(
+                body=f"New Line Added: {record.product_id.display_name}, (Qty: {record.product_uom_qty})",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        return record
+    
+    # Code to log changes when a sale order line is deleted
+    def unlink(self):
+        for line in self:
+            order = line.order_id
+            product = line.product_id.display_name
+
+            order.message_post(
+                body=f"Line Removed: {product}",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        return super().unlink()
 
 
 class PFChargesWizard(models.TransientModel):
@@ -381,7 +510,6 @@ class StockMoveLine(models.Model):
         string='Invoiced Quantity',
         default=0.0
     )
-
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
