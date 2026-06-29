@@ -426,15 +426,16 @@ class SaleOrderLine(models.Model):
     
     # Code to log changes when a sale order line is created
     def create(self, vals):
-        record = super().create(vals)
+        records = super().create(vals)
 
-        if record.order_id:
-            record.order_id.message_post(
-                body=f"New Line Added: {record.product_id.display_name}, (Qty: {record.product_uom_qty})",
-                subtype_xmlid="mail.mt_note",
-            )
+        for record in records:
+            if record.order_id:
+                record.order_id.message_post(
+                    body=f"New Line Added: {record.product_id.display_name}, (Qty: {record.product_uom_qty})",
+                    subtype_xmlid="mail.mt_note",
+                )
 
-        return record
+        return records
     
     # Code to log changes when a sale order line is deleted
     def unlink(self):

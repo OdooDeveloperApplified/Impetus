@@ -1,5 +1,6 @@
-from odoo import models,fields
+from odoo import models,fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools.safe_eval import safe_eval
 
 
 class MrpProduction(models.Model):
@@ -108,3 +109,65 @@ class MrpProduction(models.Model):
             mo.location_src_id = assembly_location.id
 
         return True
+    
+    length = fields.Float(string='Length (mm)')
+
+    @api.onchange('length')
+    def _onchange_length(self):
+        self._compute_dynamic_components()
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'length' in vals:
+            self._compute_dynamic_components()
+
+        return res
+
+    def action_confirm(self):
+        res = super().action_confirm()
+        self._compute_dynamic_components()
+        return res
+
+    def _compute_dynamic_components(self):
+        """
+        Update raw material quantities based on formulas.
+        """
+        for production in self:
+            if not production.bom_id:
+                continue
+            for move in production.move_raw_ids:
+                bom_line = production.bom_id.bom_line_ids.filtered(lambda l: l.product_id == move.product_id)
+
+                if not bom_line:
+                    continue
+
+                bom_line = bom_line[0]
+
+                if not bom_line.formula_qty:
+                    continue
+
+                localdict = {
+                    'length': production.length or 0,
+                }
+
+                try:
+                    qty = safe_eval(
+                        bom_line.formula_qty,
+                        localdict,
+                        mode="eval"
+                    )
+
+                    move.product_uom_qty = qty
+
+                except Exception:
+                    continue
+
+class MrpBomLine(models.Model):
+    _inherit = 'mrp.bom.line'
+
+    formula_qty = fields.Char(string='Quantity Formula', help="""
+        Examples:
+        length
+        length - 100
+        (length / 2) + 50
+        """)

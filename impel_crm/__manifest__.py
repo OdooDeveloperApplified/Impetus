@@ -7,7 +7,6 @@
     'depends': ['base', 'mail','crm','web'],
     'data': [
         'security/ir.model.access.csv',
-        
         'views/crm_lead_view.xml',
     ],
     'assets': {},

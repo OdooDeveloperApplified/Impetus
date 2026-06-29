@@ -72,6 +72,7 @@
                                 <!-- Left Column Content -->
                                 <span><strong>Quotation No.: </strong><t t-esc="o.name"/></span><br/>
                                 <span><strong>Date: </strong><t t-esc="o.date_order.strftime('%d-%m-%Y') if o.date_order else ''"/></span><br/>
+                                <span><strong>Delivery Date: </strong><t t-esc="o.commitment_date.strftime('%d-%m-%Y') if o.commitment_date else ''"/></span><br/>
                                 <span><strong>GR/RR No.:</strong><t t-esc="o.gr_no"/></span><br/>
                                 <span><strong>Transport: </strong><t t-esc="o.transport"/></span><br/>
                                 <span><strong>Vehicle No.:</strong><t t-esc="o.vehicle_no"/></span>
@@ -81,7 +82,7 @@
                                 <span><strong>Station: </strong><t t-esc="o.partner_id.station"/></span><br/>
                                 <span><strong>E-Way Bill No.: </strong><t t-esc="o.way_bill_no"/></span><br/>
                                 <span><strong>PO No.: </strong><t t-esc="o.po_number"/></span><br/>
-                                <span><strong>PO Date: </strong><t t-esc="o.po_date"/></span><br/>
+                                <span><strong>PO Date: </strong><t t-esc="o.po_date.strftime('%d-%m-%Y') if o.po_date else ''"/></span><br/>
                                 <span><strong>Transport Type: </strong><t t-esc="o.transport_type"/></span>
                             </div>
                         </div>

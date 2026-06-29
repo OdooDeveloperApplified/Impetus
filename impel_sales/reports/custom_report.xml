@@ -63,17 +63,21 @@
                         <div style="width:100%; border-bottom:1px solid black;">
                             <div style="display:inline-block; vertical-align:top; width:49%; border-right:1px solid black; box-sizing:border-box; padding-left:6px;">
                                 <!-- Left Column Content -->
-                                <p><strong>Quotation No.: </strong><t t-esc="o.name"/></p>
-                                <p><strong>Date: </strong><t t-esc="o.date_order.strftime('%d-%m-%Y') if o.date_order else ''"/></p>
-                                <p><strong>GR/RR No.: </strong><t t-esc="o.gr_no"/></p>
-                                <p><strong>Transport: </strong><t t-esc="o.transport"/></p>
+                                <span><strong>Quotation No.: </strong><t t-esc="o.name"/></span><br/>
+                                <span><strong>Date: </strong><t t-esc="o.date_order.strftime('%d-%m-%Y') if o.date_order else ''"/></span><br/>
+                                <span><strong>Delivery Date: </strong><t t-esc="o.commitment_date.strftime('%d-%m-%Y') if o.commitment_date else ''"/></span>
+                                <!-- <p><strong>GR/RR No.: </strong><t t-esc="o.gr_no"/></p>
+                                <p><strong>Transport: </strong><t t-esc="o.transport"/></p> -->
                                 
                             </div>
                             <div style="display:inline-block; vertical-align:top; width:49%; box-sizing:border-box; padding-left:6px;">
                                 <!-- Right Column Content -->
-                                <p><strong>Vehicle No.: </strong><t t-esc="o.vehicle_no"/></p>
+                                <!-- <p><strong>Vehicle No.: </strong><t t-esc="o.vehicle_no"/></p>
                                 <p><strong>Station: </strong><t t-esc="o.partner_id.station"/></p>
-                                <p><strong>E-Way Bill No.: </strong><t t-esc="o.way_bill_no"/></p>
+                                <p><strong>E-Way Bill No.: </strong><t t-esc="o.way_bill_no"/></p> -->
+                                <span><strong>PO No.: </strong><t t-esc="o.po_number"/></span><br/>
+                                <span><strong>PO Date: </strong><t t-esc="o.po_date.strftime('%d-%m-%Y') if o.po_date else ''"/></span><br/>
+                                
                             </div>
                         </div>
 

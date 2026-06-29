@@ -31,13 +31,11 @@
                         class="btn-secondary"
                         invisible="internal_transfer_count == 0"
                         readonly="1"/>
-
             </xpath>
             <xpath expr="//field[@name='product_id']" position="after">
                 <field name="create_date"/>
-
+                <field name="length"/>
             </xpath>
-
         </field>
     </record>
     <record id="mrp_production_tree_inherit_internal_transfer" model="ir.ui.view">
@@ -45,13 +43,20 @@
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
         <field name="arch" type="xml">
-
-            
             <xpath expr="//field[@name='product_id']" position="after">
                 <field name="create_date"/>
-
             </xpath>
+        </field>
+    </record>
 
+    <record id="view_mrp_bom_form_formula" model="ir.ui.view">
+        <field name="name">mrp.bom.form.formula</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bom_line_ids']/tree/field[@name='product_qty']" position="after">
+                <field name="formula_qty"/>
+            </xpath>
         </field>
     </record>
 </odoo>
